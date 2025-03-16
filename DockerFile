@@ -1,5 +1,5 @@
-# Use Maven as a build stage
-FROM maven:3.8.6-openjdk-17 AS build
+# Use an official Maven image with OpenJDK 17
+FROM maven:3.9.6-eclipse-temurin-17 AS build
 
 WORKDIR /app
 
@@ -10,7 +10,7 @@ COPY . .
 RUN mvn clean package -DskipTests
 
 # Use a minimal JDK image for running the app
-FROM openjdk:17-jdk-slim
+FROM eclipse-temurin:17-jdk
 
 WORKDIR /app
 
