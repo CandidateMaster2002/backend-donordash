@@ -12,6 +12,7 @@ public class DonordashApplication {
 
 	public static void main(String[] args) {
 		Dotenv dotenv = Dotenv.load();
+		System.out.println("dottt"+ dotenv.get("DATABASE_URL"));
 		System.out.println("RAZORPAY_KEY_ID: " + dotenv.get("RAZORPAY_KEY_ID"));
 		System.setProperty("DATABASE_URL", dotenv.get("DATABASE_URL"));
         System.setProperty("DATABASE_USERNAME", dotenv.get("DATABASE_USERNAME"));
