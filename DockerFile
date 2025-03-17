@@ -4,7 +4,7 @@ FROM maven:3.9.6-eclipse-temurin-17 AS build
 WORKDIR /app
 
 # Copy all project files
-COPY . .
+COPY . . 
 
 # Build the application
 RUN mvn clean package -DskipTests
@@ -16,10 +16,17 @@ WORKDIR /app
 
 # Copy the built JAR from the previous stage
 COPY --from=build /app/target/donordash-0.0.1-SNAPSHOT.jar app.jar
-COPY .env .env
+
+# Optional: Copy .env if you want to keep it in your container (this is not recommended for Render deployment)
+# Make sure .env file is available in the same directory where you are building
+# COPY .env .env 
 
 # Expose port
 EXPOSE 8080
+
+# Set environment variables directly in Docker (optional, but not recommended if you use Render environment variables)
+# You can remove this block if Render is managing them
+# ENV VAR_NAME=value
 
 # Run the application
 ENTRYPOINT ["java", "-jar", "app.jar"]
