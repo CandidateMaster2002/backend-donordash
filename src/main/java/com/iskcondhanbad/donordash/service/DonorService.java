@@ -3,6 +3,7 @@ package com.iskcondhanbad.donordash.service;
 import com.iskcondhanbad.donordash.model.Donor;
 import com.iskcondhanbad.donordash.model.DonorCultivator;
 import com.iskcondhanbad.donordash.repository.DonorRepository;
+import com.iskcondhanbad.donordash.dto.DonorDTO;
 import com.iskcondhanbad.donordash.dto.DonorSignupDto;
 import com.iskcondhanbad.donordash.repository.DonorCultivatorRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -114,21 +115,13 @@ public class DonorService {
                 .orElseThrow(() -> new Exception("Donor not found with ID: " + donorId));
     }
 
-    public List<Donor> getDonors(Integer cultivatorId, Integer supervisorId) {
-        List<Donor> donors = new ArrayList<>();
-
-        if (cultivatorId != null) {
-            donors = donorRepository.findByDonorCultivatorId(cultivatorId);
-        } else if (supervisorId != null) {
-            List<DonorCultivator> cultivators = donorCultivatorRepository.findByDonationSupervisorId(supervisorId);
-            for (DonorCultivator cultivator : cultivators) {
-                donors.addAll(donorRepository.findByDonorCultivatorId(cultivator.getId()));
-            }
-        } else {
-            donors = donorRepository.findAll();
-        }
-        return donors;
+    public List<DonorDTO> getDonors(Integer cultivatorId) {
+    if (cultivatorId != null) {
+        return donorRepository.findDonorsByCultivatorId(cultivatorId);
+    } else {
+        return donorRepository.findAllDonors();
     }
+}
 
     public Optional<Donor> getDonorById(Integer id) {
         return donorRepository.findById(id);

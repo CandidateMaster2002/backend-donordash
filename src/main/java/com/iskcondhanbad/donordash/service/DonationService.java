@@ -204,6 +204,12 @@ public class DonationService {
             case "zone":
                 results = donationRepository.findDonationSumByZone(cultivatorId, dateFrom, dateTo);
                 break;
+            case "payment_mode":
+                results = donationRepository.findDonationSumByPaymentMode(cultivatorId, dateFrom, dateTo);
+                break;
+            case "cultivator":
+                results = donationRepository.findDonationSumByCultivator(dateFrom, dateTo);
+                break;
             default:
                 throw new IllegalArgumentException("Invalid parameter");
         }

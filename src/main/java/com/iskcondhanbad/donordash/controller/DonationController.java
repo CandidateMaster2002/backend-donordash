@@ -66,7 +66,6 @@ public class DonationController {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
-
     @PostMapping("filter")
     public ResponseEntity<?> getDonationsByFilter(@RequestBody DonationFilterDto filter) {
         try {
@@ -76,12 +75,14 @@ public class DonationController {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
+    
   @GetMapping("/summary")
     public ResponseEntity<Map<String, Double>> getDonationSummary(
             @RequestParam String parameter,
             @RequestParam(required = false) Integer cultivatorId,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) Date dateFrom,
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) Date dateTo) {
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) Date dateTo) 
+            {
         try {
             Map<String, Double> summary = donationService.getDonationSumBy(parameter, cultivatorId, dateFrom, dateTo);
             return ResponseEntity.ok(summary);

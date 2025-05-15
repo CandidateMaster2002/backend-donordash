@@ -2,6 +2,7 @@ package com.iskcondhanbad.donordash.controller;
 
 import com.iskcondhanbad.donordash.model.Donor;
 import com.iskcondhanbad.donordash.service.DonorService;
+import com.iskcondhanbad.donordash.dto.DonorDTO;
 import com.iskcondhanbad.donordash.dto.DonorSignupDto;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -14,15 +15,15 @@ import java.util.Optional;
 @RequestMapping("donor")
 public class DonorController {
 
-@Autowired
-DonorService donorService;
-@Autowired
-SpecialDayService specialDayService;
+    @Autowired
+    DonorService donorService;
+    @Autowired
+    SpecialDayService specialDayService;
 
-DonorController(DonorService donorService, SpecialDayService specialDayService) {
-    this.donorService = donorService;
-    this.specialDayService = specialDayService;
-}
+    DonorController(DonorService donorService, SpecialDayService specialDayService) {
+        this.donorService = donorService;
+        this.specialDayService = specialDayService;
+    }
 
     @PostMapping("signup")
     public Donor signup(@RequestBody DonorSignupDto donorSignupDto) throws Exception {
@@ -34,7 +35,7 @@ DonorController(DonorService donorService, SpecialDayService specialDayService) 
         }
     }
 
-     @PutMapping("edit/{id}")
+    @PutMapping("edit/{id}")
     public ResponseEntity<?> updateDonor(@PathVariable Integer id, @RequestBody DonorSignupDto donorDto) {
         try {
             Donor updatedDonor = donorService.updateDonor(id, donorDto);
@@ -59,10 +60,9 @@ DonorController(DonorService donorService, SpecialDayService specialDayService) 
     }
 
     @GetMapping("/filter")
-    public ResponseEntity<?> getDonors(@RequestParam(required = false) Integer donorCultivator,
-                                       @RequestParam(required = false) Integer donationSupervisor) {
+    public ResponseEntity<?> getDonors(@RequestParam(required = false) Integer donorCultivator) {
         try {
-            List<Donor> donors = donorService.getDonors(donorCultivator, donationSupervisor);
+            List<DonorDTO> donors = donorService.getDonors(donorCultivator);
             return ResponseEntity.ok(donors);
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(e.getMessage());
