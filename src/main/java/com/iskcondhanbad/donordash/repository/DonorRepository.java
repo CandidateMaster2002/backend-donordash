@@ -10,7 +10,7 @@ import java.util.List;
 @Repository
 public interface DonorRepository extends JpaRepository<Donor, Integer> {
 
-    Donor findByEmail(String email);
+    Donor findByMobileNumber(String mobileNumber);
     List<Donor> findByDonorCultivatorId(Integer cultivatorId);
 
    @Query("SELECT new com.iskcondhanbad.donordash.dto.DonorDTO(d.id, d.name, d.username, d.category, d.photoPath) " +

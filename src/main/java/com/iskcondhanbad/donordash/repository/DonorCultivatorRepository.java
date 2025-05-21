@@ -6,7 +6,7 @@ import java.util.*;
 
 public interface DonorCultivatorRepository extends JpaRepository<DonorCultivator, Integer>{
 
-    DonorCultivator findByEmail(String email);
+    DonorCultivator findByMobileNumber(String mobileNumber);
     List<DonorCultivator> findByDonationSupervisorId(Integer supervisorId);
 
 }

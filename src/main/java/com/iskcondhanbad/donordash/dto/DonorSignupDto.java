@@ -9,7 +9,6 @@ import lombok.Data;
 @Data
 public class DonorSignupDto {
     private String name;
-    private Boolean wantPrasadam;
     private String category;
     private String email;
     private String mobileNumber;

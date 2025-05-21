@@ -23,10 +23,13 @@ public class AuthService {
     private DonorRepository donorRepository;
 
     public LoginResponseDto loginUser(LoginRequestDto loginRequest) throws Exception {
-        String email = loginRequest.getEmail();
+        String mobileNumber = loginRequest.getMobileNumber();
         String password = loginRequest.getPassword();
 
-        Admin admin = adminRepository.findByEmail(email);
+       System.out.println(mobileNumber);
+        System.out.println(password);
+
+        Admin admin = adminRepository.findByMobileNumber(mobileNumber);
         if (admin != null) {
             if (admin.getPassword().equals(password)) {
                 return new LoginResponseDto("admin", admin);
@@ -35,7 +38,7 @@ public class AuthService {
             }
         }
 
-        DonationSupervisor supervisor = donationSupervisorRepository.findByEmail(email);
+        DonationSupervisor supervisor = donationSupervisorRepository.findByMobileNumber(mobileNumber);
         if (supervisor != null) {
             if (supervisor.getPassword().equals(password)) {
                 return new LoginResponseDto("donationSupervisor", supervisor);
@@ -44,7 +47,7 @@ public class AuthService {
             }
         }
 
-        DonorCultivator cultivator = donorCultivatorRepository.findByEmail(email);
+        DonorCultivator cultivator = donorCultivatorRepository.findByMobileNumber(mobileNumber);
         if (cultivator != null) {
             if (cultivator.getPassword().equals(password)) {
                 return new LoginResponseDto("donorCultivator", cultivator);
@@ -53,7 +56,7 @@ public class AuthService {
             }
         }
 
-        Donor donor = donorRepository.findByEmail(email);
+        Donor donor = donorRepository.findByMobileNumber(mobileNumber);
         if (donor != null) {
             if (donor.getPassword().equals(password)) {
                 return new LoginResponseDto("donor", donor);
@@ -62,6 +65,6 @@ public class AuthService {
             }
         }
 
-        throw new Exception("Email does not exist.");
+        throw new Exception("Mobile no. does not exist.");
     }
 }

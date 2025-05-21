@@ -6,7 +6,7 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface DonationSupervisorRepository extends JpaRepository<DonationSupervisor, Integer> {
 
-    DonationSupervisor findByEmail(String email);
+    DonationSupervisor findByMobileNumber(String mobileNumber);
 
     
 }

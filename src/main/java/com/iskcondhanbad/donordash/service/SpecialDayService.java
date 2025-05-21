@@ -32,7 +32,6 @@ public class SpecialDayService {
     }
 
     public void saveSpecialDay(DonorSignupDto donorSignupDto, Donor donor) throws Exception {
-        if(donorSignupDto.getWantPrasadam()==false) return;
 
         if (donorSignupDto.getSpecialDays() != null) {
             donorSignupDto.getSpecialDays().forEach(specialDayDto -> {

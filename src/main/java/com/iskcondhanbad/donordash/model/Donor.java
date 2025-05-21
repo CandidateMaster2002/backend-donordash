@@ -25,8 +25,7 @@ public class Donor {
     @Column(nullable = false, unique = true)
     private String username;
 
-    @Column(nullable = false)
-    private Boolean wantPrasadam;
+   
 
     @Column(nullable = true)
     private String photoPath;
@@ -34,7 +33,7 @@ public class Donor {
     @Column(nullable = false)
     private String category;
 
-    @Column(nullable = false, unique = true)
+    @Column(nullable = true, unique = true)
     private String email;
 
     @Column(nullable = false, unique = true)

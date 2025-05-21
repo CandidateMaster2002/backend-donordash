@@ -37,7 +37,6 @@ public class DonorService {
         try {
             donor.setName(donorSignupDto.getName());
             donor.setUsername(donorSignupDto.getEmail());
-            donor.setWantPrasadam(donorSignupDto.getWantPrasadam());
             donor.setCategory("Not Specified");
             donor.setEmail(donorSignupDto.getEmail());
             donor.setMobileNumber(donorSignupDto.getMobileNumber());
