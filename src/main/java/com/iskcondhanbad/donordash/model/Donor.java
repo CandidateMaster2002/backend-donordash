@@ -25,7 +25,8 @@ public class Donor {
     @Column(nullable = false, unique = true)
     private String username;
 
-   
+    @Column(nullable = false)
+    private String type = "One Timer";
 
     @Column(nullable = true)
     private String photoPath;

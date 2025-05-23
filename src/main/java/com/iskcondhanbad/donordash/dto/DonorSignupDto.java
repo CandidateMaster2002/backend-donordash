@@ -1,7 +1,6 @@
 package com.iskcondhanbad.donordash.dto;
 
-import com.iskcondhanbad.donordash.model.DonorCultivator;
-import com.iskcondhanbad.donordash.model.SpecialDay;
+
 import java.util.List;
 
 import lombok.Data;
