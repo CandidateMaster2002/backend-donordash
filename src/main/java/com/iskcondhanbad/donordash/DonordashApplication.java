@@ -21,7 +21,6 @@ public class DonordashApplication {
 		System.setProperty("RAZORPAY_KEY_SECRET", dotenv.get("RAZORPAY_KEY_SECRET"));
 		System.setProperty("MAIL_USERNAME", dotenv.get("MAIL_USERNAME"));
 		System.setProperty("MAIL_PASSWORD", dotenv.get("MAIL_PASSWORD"));
-
 		SpringApplication.run(DonordashApplication.class, args);
 	}
 }
