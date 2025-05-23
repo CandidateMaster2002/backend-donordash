@@ -7,6 +7,7 @@ import lombok.Data;
 
 @Data
 public class DonorSignupDto {
+
     private String name;
     private String category;
     private String email;

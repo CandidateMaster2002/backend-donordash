@@ -38,6 +38,7 @@ public class DonorService {
             donor.setName(donorSignupDto.getName());
             donor.setUsername(donorSignupDto.getEmail());
             donor.setCategory("Not Specified");
+            donor.setType("One Timer");
             donor.setEmail(donorSignupDto.getEmail());
             donor.setMobileNumber(donorSignupDto.getMobileNumber());
             donor.setPassword(donorSignupDto.getPassword());
@@ -53,7 +54,6 @@ public class DonorService {
             Integer donorId = donor.getId();
             donor.setUsername(generateUsername(donorSignupDto, donorId));
             donor = donorRepository.save(donor);
-            specialDayService.saveSpecialDay(donorSignupDto, donor);
             return donor;
         } catch (Exception e) {
             throw new Exception(e.getMessage());

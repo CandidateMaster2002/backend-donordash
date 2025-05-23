@@ -5,13 +5,17 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration;
 import org.springframework.web.bind.annotation.CrossOrigin;
 
+
 @CrossOrigin
 @SpringBootApplication(exclude = { SecurityAutoConfiguration.class })
 public class DonordashApplication {
 
     public static void main(String[] args) {
+        // Load system environment variables directly
+        System.out.println("DATABASE_URL: " + System.getenv("DATABASE_URL"));
+        System.out.println("RAZORPAY_KEY_ID: " + System.getenv("RAZORPAY_KEY_ID"));
 
-        // Fetching environment variables from system environment (e.g., Render dashboard)
+        // Set system properties if needed elsewhere in the app
         System.setProperty("DATABASE_URL", System.getenv("DATABASE_URL"));
         System.setProperty("DATABASE_USERNAME", System.getenv("DATABASE_USERNAME"));
         System.setProperty("DATABASE_PASSWORD", System.getenv("DATABASE_PASSWORD"));
