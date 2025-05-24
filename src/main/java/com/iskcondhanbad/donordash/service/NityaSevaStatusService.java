@@ -2,17 +2,22 @@ package com.iskcondhanbad.donordash.service;
 
 import java.time.YearMonth;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import com.iskcondhanbad.donordash.dto.NityaSevaDonorStatusDTO;
 import com.iskcondhanbad.donordash.dto.NityaSevaMonthStatusDTO;
+import com.iskcondhanbad.donordash.dto.NityaSevaStatusDTO;
+import com.iskcondhanbad.donordash.dto.UpdateNityaSevaStatusDTO;
 import com.iskcondhanbad.donordash.model.Donor;
 import com.iskcondhanbad.donordash.model.NityaSevaStatus;
 import com.iskcondhanbad.donordash.repository.DonorRepository;
 import com.iskcondhanbad.donordash.repository.NityaSevaStatusRepository;
+
+import jakarta.persistence.EntityNotFoundException;
 
 @Service
 public class NityaSevaStatusService {
@@ -26,56 +31,80 @@ public class NityaSevaStatusService {
     private DonorRepository donorRepository;
 
     public List<NityaSevaDonorStatusDTO> getNityaSevaStatus(Integer cultivatorId) {
-        List<Donor> donors;
+        List<Donor> donors = cultivatorId == null
+                ? donorRepository.findByType(NITYA_SEVAK_TYPE)
+                : donorRepository.findByTypeAndCultivatorId(NITYA_SEVAK_TYPE, cultivatorId);
 
-        if (cultivatorId == null) {
-            donors = donorRepository.findByType(NITYA_SEVAK_TYPE);
-        } else {
-            donors = donorRepository.findByTypeAndCultivatorId(NITYA_SEVAK_TYPE, cultivatorId);
-        }
+        List<String> months = generateMonthsList();
 
-        // System.out.println("Donors: " + donors);
+        List<Integer> donorIds = donors.stream().map(Donor::getId).collect(Collectors.toList());
+        List<NityaSevaStatus> existingStatuses = nityaSevaStatusRepository
+                .findByDonorIdInAndMonthIn(donorIds, months);
+
+        Map<AbstractMap.SimpleEntry<Integer, String>, NityaSevaStatus> statusMap = existingStatuses.stream()
+                .collect(Collectors.toMap(
+                        s -> new AbstractMap.SimpleEntry<>(s.getDonor().getId(), s.getMonth()),
+                        Function.identity()));
 
         List<NityaSevaDonorStatusDTO> result = new ArrayList<>();
-
-
-        
-
-           DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MM-yyyy");
-        YearMonth now = YearMonth.now();
-
-        // Prepare 15 months: last 12 including current, plus next 3
-        List<String> months = new ArrayList<>();
-        for (int i = 12; i > 0; i--) {
-            months.add(now.minusMonths(i).format(formatter));
-        }
-        months.add(now.format(formatter));
-        for (int i = 1; i <= 3; i++) {
-            months.add(now.plusMonths(i).format(formatter));
-        }
-
         for (Donor donor : donors) {
             List<NityaSevaMonthStatusDTO> monthStatuses = new ArrayList<>();
             for (String month : months) {
-                Optional<NityaSevaStatus> statusOpt =
-                        nityaSevaStatusRepository.findByDonorIdAndMonth(donor.getId(), month);
-                NityaSevaStatus status = statusOpt.orElseGet(() -> {
-                    NityaSevaStatus newStatus = new NityaSevaStatus();
-                    newStatus.setDonor(donor);
-                    newStatus.setMonth(month);
-                    newStatus.setSweetOrBtg(false);
-                    newStatus.setNityaSeva(false);
-                    return nityaSevaStatusRepository.save(newStatus);
-                });
-                monthStatuses.add(new NityaSevaMonthStatusDTO(
-                        status.getMonth(),
-                        status.isSweetOrBtg(),
-                        status.isNityaSeva()
-                        
-                ));
+                NityaSevaStatus status = statusMap.get(new AbstractMap.SimpleEntry<>(donor.getId(), month));
+                if (status == null) {
+                    monthStatuses.add(new NityaSevaMonthStatusDTO(month, false, false));
+                } else {
+                    monthStatuses.add(new NityaSevaMonthStatusDTO(
+                            status.getMonth(),
+                            status.isSweetOrBtg(),
+                            status.isNityaSeva()));
+                }
             }
             result.add(new NityaSevaDonorStatusDTO(donor.getId(), donor.getName(), monthStatuses));
         }
+
         return result;
     }
+
+    public void updateNityaSevaStatus(UpdateNityaSevaStatusDTO updateNityaSevaStatusDTO) {
+        // Find existing record
+        Optional<NityaSevaStatus> existingStatus = nityaSevaStatusRepository
+                .findByDonorIdAndMonth(updateNityaSevaStatusDTO.getDonorId(), updateNityaSevaStatusDTO.getMonth());
+
+        NityaSevaStatus status;
+
+        if (existingStatus.isPresent()) {
+            status = existingStatus.get();
+        } else {
+            status = new NityaSevaStatus();
+            // Assuming you have a method setDonorId or setDonor; adjust as per your model
+            Donor donor = donorRepository.findById(updateNityaSevaStatusDTO.getDonorId())
+                    .orElseThrow(() -> new EntityNotFoundException(
+                            "Donor not found with id: " + updateNityaSevaStatusDTO.getDonorId()));
+            status.setDonor(donor);
+            status.setMonth(updateNityaSevaStatusDTO.getMonth());
+            status.setNityaSeva(false);
+            status.setSweetOrBtg(false);
+        }
+
+        if ("nitya_seva".equalsIgnoreCase(updateNityaSevaStatusDTO.getEventType())) {
+            status.setNityaSeva(updateNityaSevaStatusDTO.isFinalValue());
+        } else if ("sweet_or_btg".equalsIgnoreCase(updateNityaSevaStatusDTO.getEventType())) {
+            status.setSweetOrBtg(updateNityaSevaStatusDTO.isFinalValue());
+        }
+
+        nityaSevaStatusRepository.save(status);
+    }
+
+    private List<String> generateMonthsList() {
+        List<String> months = new ArrayList<>();
+        YearMonth current = YearMonth.now();
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MM-yyyy");
+        for (int i = -3; i < 12; i++) {
+            months.add(current.minusMonths(i).format(formatter));
+        }
+        Collections.reverse(months); // Optional: to have chronological order
+        return months;
+    }
+
 }
