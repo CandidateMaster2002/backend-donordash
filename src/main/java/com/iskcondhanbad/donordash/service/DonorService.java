@@ -36,7 +36,7 @@ public class DonorService {
 
         try {
             donor.setName(donorSignupDto.getName());
-            donor.setUsername(donorSignupDto.getEmail());
+            donor.setUsername(donorSignupDto.getMobileNumber());
             donor.setCategory("Not Specified");
             donor.setType("One Timer");
             donor.setEmail(donorSignupDto.getEmail());
