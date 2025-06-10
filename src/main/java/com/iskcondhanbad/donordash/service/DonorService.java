@@ -39,7 +39,7 @@ public class DonorService {
             donor.setUsername(donorSignupDto.getMobileNumber());
             donor.setCategory("Not Specified");
             donor.setType("One Timer");
-            donor.setEmail(donorSignupDto.getEmail());
+            donor.setEmail(null);
             donor.setMobileNumber(donorSignupDto.getMobileNumber());
             donor.setPassword(donorSignupDto.getPassword());
             donor.setState(donorSignupDto.getState());
