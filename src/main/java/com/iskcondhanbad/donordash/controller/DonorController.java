@@ -69,6 +69,7 @@ public class DonorController {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
+    
 
     @GetMapping("/by-cultivator-names")
     public ResponseEntity<List<DonorDetailsDto>> getDonorsByCultivatorNames(
