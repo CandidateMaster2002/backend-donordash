@@ -1,5 +1,6 @@
 package com.iskcondhanbad.donordash.controller;
 
+import com.iskcondhanbad.donordash.dto.DonationDetailsDTO;
 import com.iskcondhanbad.donordash.dto.DonationDto;
 import com.iskcondhanbad.donordash.dto.DonationFilterDto;
 import com.iskcondhanbad.donordash.dto.DonationResponseDto;
@@ -36,6 +37,7 @@ public class DonationController {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
+
     @GetMapping("/by-donor-id/{donorId}")
     public ResponseEntity<?> getDonationsByDonorId(@PathVariable Integer donorId) {
         try {
@@ -45,7 +47,6 @@ public class DonationController {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
-    
 
     @PutMapping("/change-status/{donationId}/{newStatus}")
     public ResponseEntity<?> changeStatus(@PathVariable Long donationId, @PathVariable String newStatus) {
@@ -66,6 +67,7 @@ public class DonationController {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
+
     @PostMapping("filter")
     public ResponseEntity<?> getDonationsByFilter(@RequestBody DonationFilterDto filter) {
         try {
@@ -75,14 +77,13 @@ public class DonationController {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
-    
-  @GetMapping("/summary")
+
+    @GetMapping("/summary")
     public ResponseEntity<Map<String, Double>> getDonationSummary(
             @RequestParam String parameter,
             @RequestParam(required = false) Integer cultivatorId,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) Date dateFrom,
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) Date dateTo) 
-            {
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) Date dateTo) {
         try {
             Map<String, Double> summary = donationService.getDonationSumBy(parameter, cultivatorId, dateFrom, dateTo);
             return ResponseEntity.ok(summary);
@@ -101,7 +102,6 @@ public class DonationController {
         }
     }
 
-
     @Value("${razorpay.keyId}")
     private String razorpayKeyId;
 
@@ -118,7 +118,7 @@ public class DonationController {
             orderRequest.put("currency", "INR");
             orderRequest.put("receipt", "txn_" + data.get("donorId"));
 
-            Order order=razorpayClient.Orders.create(orderRequest);
+            Order order = razorpayClient.Orders.create(orderRequest);
 
             Map<String, Object> response = new HashMap<>();
             response.put("orderId", order.get("id"));
@@ -131,6 +131,17 @@ public class DonationController {
             e.printStackTrace();
             return ResponseEntity.status(500).body(null);
         }
+    }
+
+    @GetMapping("filtered")
+    public ResponseEntity<List<DonationDetailsDTO>> getFilteredDonations(
+            @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd") Date startDate,
+            @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd") Date endDate,
+            @RequestParam(required = false) List<String> paymentModes,
+            @RequestParam(required = false) List<String> cultivatorNames) {
+        List<DonationDetailsDTO> donations = donationService.getFilteredDonations(startDate, endDate, paymentModes,
+                cultivatorNames);
+        return ResponseEntity.ok(donations);
     }
 
     @PostMapping("/verify-payment")
@@ -162,6 +173,7 @@ public class DonationController {
 
         byte[] hash = sha256_HMAC.doFinal(data.getBytes("UTF-8"));
         return Hex.encodeHexString(hash);
+
     }
-  
+
 }

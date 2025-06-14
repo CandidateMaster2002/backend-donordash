@@ -3,6 +3,7 @@ package com.iskcondhanbad.donordash.controller;
 import com.iskcondhanbad.donordash.model.Donor;
 import com.iskcondhanbad.donordash.service.DonorService;
 import com.iskcondhanbad.donordash.dto.DonorDTO;
+import com.iskcondhanbad.donordash.dto.DonorDetailsDto;
 import com.iskcondhanbad.donordash.dto.DonorSignupDto;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -67,5 +68,12 @@ public class DonorController {
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
+    }
+
+    @GetMapping("/by-cultivator-names")
+    public ResponseEntity<List<DonorDetailsDto>> getDonorsByCultivatorNames(
+            @RequestParam(required = false) List<String> cultivatorNames) {
+        List<DonorDetailsDto> donors = donorService.getDonorsByCultivators(cultivatorNames);
+        return ResponseEntity.ok(donors);
     }
 }

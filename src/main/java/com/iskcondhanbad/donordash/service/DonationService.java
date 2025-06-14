@@ -1,5 +1,6 @@
 package com.iskcondhanbad.donordash.service;
 
+import com.iskcondhanbad.donordash.dto.DonationDetailsDTO;
 import com.iskcondhanbad.donordash.dto.DonationDto;
 import com.iskcondhanbad.donordash.dto.DonationFilterDto;
 import com.iskcondhanbad.donordash.model.Donation;
@@ -8,11 +9,12 @@ import com.iskcondhanbad.donordash.model.DonorCultivator;
 import com.iskcondhanbad.donordash.repository.DonationRepository;
 import com.iskcondhanbad.donordash.repository.DonorRepository;
 import com.iskcondhanbad.donordash.utils.Services;
-
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.Join;
+import jakarta.persistence.criteria.JoinType;
 import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
 import com.iskcondhanbad.donordash.dto.DonationResponseDto;
@@ -21,6 +23,7 @@ import com.iskcondhanbad.donordash.dto.ReceiptDto;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -59,6 +62,75 @@ public class DonationService {
 
         return donationRepository.save(donation);
     }
+
+   
+
+    @Transactional(readOnly = true)
+    public List<DonationDetailsDTO> getFilteredDonations(Date startDate, Date endDate, List<String> paymentModes, List<String> cultivatorNames) {
+
+        CriteriaBuilder cb = entityManager.getCriteriaBuilder();
+        CriteriaQuery<Donation> query = cb.createQuery(Donation.class);
+        Root<Donation> donationRoot = query.from(Donation.class);
+
+        Join<Donation, Donor> donorJoin = donationRoot.join("donor", JoinType.INNER);
+        Join<Donor, DonorCultivator> cultivatorJoin = donorJoin.join("donorCultivator", JoinType.INNER);
+
+        List<Predicate> predicates = new ArrayList<>();
+
+
+         predicates.add(cb.isNotNull(donationRoot.get("verifiedAt")));
+
+        if (startDate != null) {
+            predicates.add(cb.greaterThanOrEqualTo(donationRoot.get("paymentDate"), startDate));
+        }
+        if (endDate != null) {
+            predicates.add(cb.lessThanOrEqualTo(donationRoot.get("paymentDate"), endDate));
+        }
+        if (paymentModes != null && !paymentModes.isEmpty()) {
+            predicates.add(donationRoot.get("paymentMode").in(paymentModes));
+        }
+        if (cultivatorNames != null && !cultivatorNames.isEmpty()) {
+            predicates.add(cultivatorJoin.get("name").in(cultivatorNames));
+        }
+
+        query.select(donationRoot)
+                .where(predicates.toArray(new Predicate[0]))
+                .orderBy(cb.desc(donationRoot.get("paymentDate")));
+
+        List<Donation> donations = entityManager.createQuery(query).getResultList();
+
+        return donations.stream().map(this::mapToDTO).collect(Collectors.toList());
+    }
+
+    private DonationDetailsDTO mapToDTO(Donation donation) {
+        Donor donor = donation.getDonor();
+        DonorCultivator cultivator = donor.getDonorCultivator();
+
+        DonationDetailsDTO dto = new DonationDetailsDTO();
+        dto.setDonationAmount(donation.getAmount());
+        dto.setDonationPurpose(donation.getPurpose());
+        dto.setPaymentMethod(donation.getPaymentMode());
+        dto.setTransactionId(donation.getTransactionId());
+        dto.setRemark(donation.getRemark());
+        dto.setPaymentDate(donation.getPaymentDate());
+        dto.setCreatedAt(donation.getCreatedAt());
+        dto.setVerifiedAt(donation.getVerifiedAt());
+        dto.setReceiptNumber(donation.getReceiptId());
+
+        // Donor info
+        dto.setDonorName(donor.getName());
+        dto.setEmail(donor.getEmail());
+        dto.setMobile(donor.getMobileNumber());
+        dto.setPanNumber(donor.getPanNumber());
+        dto.setFullAddress(donor.getAddress());
+        dto.setPincode(donor.getPincode());
+        dto.setZone(donor.getZone());
+        dto.setConnectedTo(cultivator.getName());
+
+        return dto;
+    }
+
+   
 
     public Donation changeStatus(Long donationId, String newStatus) throws Exception {
         Donation donation = findDonationById(donationId);

@@ -4,11 +4,13 @@ import com.iskcondhanbad.donordash.model.Donor;
 import com.iskcondhanbad.donordash.model.DonorCultivator;
 import com.iskcondhanbad.donordash.repository.DonorRepository;
 import com.iskcondhanbad.donordash.dto.DonorDTO;
+import com.iskcondhanbad.donordash.dto.DonorDetailsDto;
 import com.iskcondhanbad.donordash.dto.DonorSignupDto;
 import com.iskcondhanbad.donordash.repository.DonorCultivatorRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import java.util.Optional;
+import java.util.stream.Collectors;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -137,5 +139,23 @@ public class DonorService {
         
         return id + "," + namePart + "," + addressPart;
     }
+
+
+    public List<DonorDetailsDto> getDonorsByCultivators(List<String> cultivatorNames) {
+    List<Donor> donors = donorRepository.findByCultivatorNames(cultivatorNames == null || cultivatorNames.isEmpty() ? null : cultivatorNames);
+
+
+
+   return donors.stream().map(d -> new DonorDetailsDto(
+        d.getName(),
+        d.getAddress() + ", " + d.getCity() + ", " + d.getState() + " - " + d.getPincode(),
+        d.getMobileNumber(),
+        d.getEmail(),
+        d.getPanNumber(),
+        d.getDonorCultivator() != null ? d.getDonorCultivator().getName() : null,
+        d.getZone(),
+        d.getPassword()
+)).collect(Collectors.toList());
+}
     
 }
