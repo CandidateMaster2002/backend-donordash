@@ -138,8 +138,10 @@ public class DonationController {
             @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd") Date startDate,
             @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd") Date endDate,
             @RequestParam(required = false) List<String> paymentModes,
+            @RequestParam(required = false) List<String> statuses,
             @RequestParam(required = false) List<String> cultivatorNames) {
         List<DonationDetailsDTO> donations = donationService.getFilteredDonations(startDate, endDate, paymentModes,
+                statuses,
                 cultivatorNames);
         return ResponseEntity.ok(donations);
     }

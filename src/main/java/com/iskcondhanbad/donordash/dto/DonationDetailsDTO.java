@@ -5,6 +5,7 @@ import java.util.Date;
 @Data
 public class DonationDetailsDTO {
     private Date paymentDate;
+    private Long donationId;
     private Double donationAmount;
     private String donorName;
     private String pincode;
@@ -12,6 +13,7 @@ public class DonationDetailsDTO {
     private String panNumber;
     private String mobile;
     private String email;
+    private String status; // e.g., "Pending", "Completed", "Failed"
     private String donationPurpose;
     private String paymentMethod;
     private String transactionId;

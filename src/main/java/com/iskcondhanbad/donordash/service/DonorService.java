@@ -117,45 +117,48 @@ public class DonorService {
     }
 
     public List<DonorDTO> getDonors(Integer cultivatorId) {
-    if (cultivatorId != null) {
-        return donorRepository.findDonorsByCultivatorId(cultivatorId);
-    } else {
-        return donorRepository.findAllDonors();
+        if (cultivatorId != null) {
+            return donorRepository.findDonorsByCultivatorId(cultivatorId);
+        } else {
+            return donorRepository.findAllDonors();
+        }
     }
-}
 
     public Optional<Donor> getDonorById(Integer id) {
         return donorRepository.findById(id);
     }
 
     public String generateUsername(DonorSignupDto donorSignupDto, Integer id) {
-        String namePart = donorSignupDto.getName().length() > 15 
-                ? donorSignupDto.getName().substring(0, 15) 
+        String namePart = donorSignupDto.getName().length() > 15
+                ? donorSignupDto.getName().substring(0, 15)
                 : donorSignupDto.getName();
-        
-        String addressPart = donorSignupDto.getAddress().length() > 15 
-                ? donorSignupDto.getAddress().substring(0, 15) 
+
+        String addressPart = donorSignupDto.getAddress().length() > 15
+                ? donorSignupDto.getAddress().substring(0, 15)
                 : donorSignupDto.getAddress();
-        
+
         return id + "," + namePart + "," + addressPart;
     }
 
-
     public List<DonorDetailsDto> getDonorsByCultivators(List<String> cultivatorNames) {
-    List<Donor> donors = donorRepository.findByCultivatorNames(cultivatorNames == null || cultivatorNames.isEmpty() ? null : cultivatorNames);
+        List<Donor> donors = donorRepository
+                .findByCultivatorNames(cultivatorNames == null || cultivatorNames.isEmpty() ? null : cultivatorNames);
 
+        return donors.stream().map(d -> new DonorDetailsDto(
+                d.getId(),
+                d.getName(),
+                d.getAddress() + ", " + d.getCity() + ", " + d.getState() + " - " + d.getPincode(),
+                d.getMobileNumber(),
+                d.getEmail(),
+                d.getPanNumber(),
+                d.getDonorCultivator() != null ? d.getDonorCultivator().getName() : null,
+                d.getZone(),
+                d.getPassword(),
+                d.getCategory(),
+                d.getType(),
+                d.getUsername(),
+                d.getRemark()
+                )).collect(Collectors.toList());
+    }
 
-
-   return donors.stream().map(d -> new DonorDetailsDto(
-        d.getName(),
-        d.getAddress() + ", " + d.getCity() + ", " + d.getState() + " - " + d.getPincode(),
-        d.getMobileNumber(),
-        d.getEmail(),
-        d.getPanNumber(),
-        d.getDonorCultivator() != null ? d.getDonorCultivator().getName() : null,
-        d.getZone(),
-        d.getPassword()
-)).collect(Collectors.toList());
-}
-    
 }

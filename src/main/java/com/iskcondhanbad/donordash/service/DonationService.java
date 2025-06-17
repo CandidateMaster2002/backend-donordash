@@ -66,8 +66,9 @@ public class DonationService {
    
 
     @Transactional(readOnly = true)
-    public List<DonationDetailsDTO> getFilteredDonations(Date startDate, Date endDate, List<String> paymentModes, List<String> cultivatorNames) {
+    public List<DonationDetailsDTO> getFilteredDonations(Date startDate, Date endDate, List<String> paymentModes, List <String> donationStatuses, List<String> cultivatorNames) {
 
+       
         CriteriaBuilder cb = entityManager.getCriteriaBuilder();
         CriteriaQuery<Donation> query = cb.createQuery(Donation.class);
         Root<Donation> donationRoot = query.from(Donation.class);
@@ -78,7 +79,6 @@ public class DonationService {
         List<Predicate> predicates = new ArrayList<>();
 
 
-         predicates.add(cb.isNotNull(donationRoot.get("verifiedAt")));
 
         if (startDate != null) {
             predicates.add(cb.greaterThanOrEqualTo(donationRoot.get("paymentDate"), startDate));
@@ -86,6 +86,10 @@ public class DonationService {
         if (endDate != null) {
             predicates.add(cb.lessThanOrEqualTo(donationRoot.get("paymentDate"), endDate));
         }
+         if (donationStatuses != null && !donationStatuses.isEmpty()) {
+            predicates.add(donationRoot.get("status").in(donationStatuses));
+        }
+
         if (paymentModes != null && !paymentModes.isEmpty()) {
             predicates.add(donationRoot.get("paymentMode").in(paymentModes));
         }
@@ -116,8 +120,8 @@ public class DonationService {
         dto.setCreatedAt(donation.getCreatedAt());
         dto.setVerifiedAt(donation.getVerifiedAt());
         dto.setReceiptNumber(donation.getReceiptId());
-
-        // Donor info
+        dto.setStatus(donation.getStatus());
+        dto.setDonationId(donation.getId());
         dto.setDonorName(donor.getName());
         dto.setEmail(donor.getEmail());
         dto.setMobile(donor.getMobileNumber());
