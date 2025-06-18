@@ -157,7 +157,11 @@ public class DonationService {
         donation.setStatus(newStatus);
         if ("Verified".equalsIgnoreCase(newStatus)) {
             donation.setVerifiedAt(new Date());
-            donation.setReceiptId(generateReceiptId(donationId));
+            // Only generate receipt id if donor's category is not "no_receipt"
+            if (donation.getDonor() != null && donation.getDonor().getCategory() != null
+                    && !"no_receipt".equalsIgnoreCase(donation.getDonor().getCategory())) {
+                donation.setReceiptId(generateReceiptId(donationId));
+            }
         }
 
         return donationRepository.save(donation);
