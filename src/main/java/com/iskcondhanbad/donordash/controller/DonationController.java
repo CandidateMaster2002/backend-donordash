@@ -125,6 +125,7 @@ public class DonationController {
             orderRequest.put("amount", data.get("amount"));
             orderRequest.put("currency", "INR");
             orderRequest.put("receipt", "txn_" + data.get("donorId"));
+            orderRequest.put("payment_capture", 1);
 
             Order order = razorpayClient.Orders.create(orderRequest);
 
