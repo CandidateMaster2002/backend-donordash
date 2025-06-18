@@ -1,5 +1,6 @@
 package com.iskcondhanbad.donordash.service;
 
+import com.iskcondhanbad.donordash.dto.BulkEditResponseDto;
 import com.iskcondhanbad.donordash.dto.DonationDetailsDTO;
 import com.iskcondhanbad.donordash.dto.DonationDto;
 import com.iskcondhanbad.donordash.dto.DonationFilterDto;
@@ -18,7 +19,9 @@ import jakarta.persistence.criteria.JoinType;
 import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
 import com.iskcondhanbad.donordash.dto.DonationResponseDto;
+import com.iskcondhanbad.donordash.dto.DonationUpdateErrorDto;
 import com.iskcondhanbad.donordash.dto.EditDonationDto;
+import com.iskcondhanbad.donordash.dto.EditDonationDtoWithId;
 import com.iskcondhanbad.donordash.dto.ReceiptDto;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -62,6 +65,37 @@ public class DonationService {
 
         return donationRepository.save(donation);
     }
+
+    public BulkEditResponseDto bulkEditDonations(List<EditDonationDtoWithId> donationUpdates) {
+    List<Donation> successfulUpdates = new ArrayList<>();
+    List<DonationUpdateErrorDto> errors = new ArrayList<>();
+
+    for (EditDonationDtoWithId dto : donationUpdates) {
+        try {
+            // First update editable fields
+            EditDonationDto editDto = new EditDonationDto();
+            editDto.setAmount(dto.getAmount());
+            editDto.setPurpose(dto.getPurpose());
+            editDto.setPaymentMode(dto.getPaymentMode());
+            editDto.setTransactionId(dto.getTransactionId());
+            editDto.setRemark(dto.getRemark());
+
+            Donation updatedDonation = editDonation(dto.getDonationId(), editDto);
+
+            // If status is provided, try changing it
+            if (dto.getStatus() != null) {
+                updatedDonation = changeStatus(dto.getDonationId(), dto.getStatus());
+            }
+
+            successfulUpdates.add(updatedDonation);
+        } catch (Exception e) {
+            errors.add(new DonationUpdateErrorDto(dto.getDonationId(), e.getMessage()));
+        }
+    }
+
+    return new BulkEditResponseDto(successfulUpdates, errors);
+}
+
 
    
 

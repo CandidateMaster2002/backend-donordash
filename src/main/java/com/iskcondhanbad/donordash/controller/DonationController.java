@@ -1,10 +1,12 @@
 package com.iskcondhanbad.donordash.controller;
 
+import com.iskcondhanbad.donordash.dto.BulkEditResponseDto;
 import com.iskcondhanbad.donordash.dto.DonationDetailsDTO;
 import com.iskcondhanbad.donordash.dto.DonationDto;
 import com.iskcondhanbad.donordash.dto.DonationFilterDto;
 import com.iskcondhanbad.donordash.dto.DonationResponseDto;
 import com.iskcondhanbad.donordash.dto.EditDonationDto;
+import com.iskcondhanbad.donordash.dto.EditDonationDtoWithId;
 import com.iskcondhanbad.donordash.dto.ReceiptDto;
 import com.iskcondhanbad.donordash.model.Donation;
 import com.iskcondhanbad.donordash.service.DonationService;
@@ -56,6 +58,12 @@ public class DonationController {
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
+    }
+
+    @PutMapping("/bulk-edit")
+    public ResponseEntity<?> bulkEditDonations(@RequestBody List<EditDonationDtoWithId> donationUpdates) {
+        BulkEditResponseDto response = donationService.bulkEditDonations(donationUpdates);
+        return ResponseEntity.ok(response);
     }
 
     @PutMapping("edit/{donationId}")
