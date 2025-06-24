@@ -377,6 +377,7 @@ public class DonationService {
         receipt.setPaymentDate(donation.getPaymentDate().toString());
         receipt.setAmount(donation.getAmount());
         receipt.setDonorName(donor.getName());
+        receipt.setDonationId(donation.getId().toString());
         receipt.setDonorAddress(donor.getAddress());
         receipt.setDonorPIN(donor.getPincode());
         receipt.setPurpose(donation.getPurpose());
