@@ -379,6 +379,9 @@ public class DonationService {
         receipt.setDonorName(donor.getName());
         receipt.setDonorAddress(donor.getAddress());
         receipt.setDonorPIN(donor.getPincode());
+        receipt.setPurpose(donation.getPurpose());
+        receipt.setDonorCultivatorId(donor.getDonorCultivator() != null ? donor.getDonorCultivator().getId().toString() : null);
+        receipt.setDonorCultivatorName(donor.getDonorCultivator() != null ? donor.getDonorCultivator().getName() : null);
         receipt.setPan(donor.getPanNumber());
         receipt.setMobile(donor.getMobileNumber());
         receipt.setEmail(donor.getEmail());
