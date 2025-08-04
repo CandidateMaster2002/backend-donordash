@@ -2,10 +2,12 @@ package com.iskcondhanbad.donordash.service;
 
 import com.iskcondhanbad.donordash.model.Donor;
 import com.iskcondhanbad.donordash.model.DonorCultivator;
+import com.iskcondhanbad.donordash.model.DonorTransfer;
 import com.iskcondhanbad.donordash.repository.DonorRepository;
 import com.iskcondhanbad.donordash.dto.DonorDTO;
 import com.iskcondhanbad.donordash.dto.DonorDetailsDto;
 import com.iskcondhanbad.donordash.dto.DonorSignupDto;
+import com.iskcondhanbad.donordash.dto.RegisteredDonorDetailsDto;
 import com.iskcondhanbad.donordash.repository.DonorCultivatorRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -49,6 +51,7 @@ public class DonorService {
             donor.setZone(donorSignupDto.getZone());
             donor.setPincode(donorSignupDto.getPincode());
             donor.setAddress(donorSignupDto.getAddress());
+            donor.setEmail(donorSignupDto.getEmail());
             donor.setPanNumber(donorSignupDto.getPanNumber());
             donor.setRemark(donorSignupDto.getRemark());
             donor.setDonorCultivator(donorCultivatorOptional.get());
@@ -116,14 +119,13 @@ public class DonorService {
                 .orElseThrow(() -> new Exception("Donor not found with ID: " + donorId));
     }
 
-    public List<DonorDTO> getDonors(Integer cultivatorId) {
-        if (cultivatorId != null) {
-            return donorRepository.findDonorsByCultivatorId(cultivatorId);
-        } else {
-            return donorRepository.findAllDonors();
-        }
+ public List<DonorDetailsDto> getDonors(Integer cultivatorId) {
+    if (cultivatorId != null) {
+        return donorRepository.findAllByDonorCultivatorId(cultivatorId);
+    } else {
+        return donorRepository.findAllDonorDetails();
     }
-
+}
     public Optional<Donor> getDonorById(Integer id) {
         return donorRepository.findById(id);
     }
@@ -160,5 +162,35 @@ public class DonorService {
                 d.getRemark()
                 )).collect(Collectors.toList());
     }
+
+      public RegisteredDonorDetailsDto getDonorByMobile(String mobileNumber) {
+        RegisteredDonorDetailsDto dto = new RegisteredDonorDetailsDto();
+        Donor donor = donorRepository.findByMobileNumber(mobileNumber);
+        if (donor!=null) {
+            dto.setDonorRegistered(true);
+            dto.setId(donor.getId());
+            dto.setName(donor.getName());
+            dto.setUsername(donor.getUsername());
+            dto.setType(donor.getType());
+            dto.setCategory(donor.getCategory());
+            dto.setEmail(donor.getEmail());
+            dto.setMobileNumber(donor.getMobileNumber());
+            dto.setState(donor.getState());
+            dto.setCity(donor.getCity());
+            dto.setZone(donor.getZone());
+            dto.setPincode(donor.getPincode());
+            dto.setAddress(donor.getAddress());
+            dto.setPanNumber(donor.getPanNumber());
+            dto.setRemark(donor.getRemark());
+            dto.setDonorCultivatorId(donor.getDonorCultivator().getId());
+            dto.setDonorCultivatorName(donor.getDonorCultivator().getName());
+        } else {
+            dto.setDonorRegistered(false);
+        }
+        return dto;
+    }
+
+
+
 
 }

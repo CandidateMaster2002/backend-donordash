@@ -30,15 +30,16 @@ public class DonationController {
     @Autowired
     DonationService donationService;
 
-    @PostMapping("/donate")
-    public ResponseEntity<?> donate(@RequestBody DonationDto donationDto) {
-        try {
-            Donation donation = donationService.donate(donationDto);
-            return ResponseEntity.ok(donation);
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
-        }
+  @PostMapping("/donate")
+public ResponseEntity<?> donate(@RequestBody DonationDto donationDto) {
+    try {
+        AddDonationResponseDto addDonationResponseDto = donationService.donate(donationDto);
+        return ResponseEntity.ok(addDonationResponseDto);
+    } catch (Exception e) {
+        return ResponseEntity.badRequest().body(e.getMessage());
     }
+}
+
 
     @GetMapping("/by-donor-id/{donorId}")
     public ResponseEntity<?> getDonationsByDonorId(@PathVariable Integer donorId) {
@@ -100,6 +101,20 @@ public class DonationController {
         }
     }
 
+    
+    @GetMapping("filtered")
+    public ResponseEntity<List<DonationDetailsDTO>> getFilteredDonations(
+            @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd") Date startDate,
+            @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd") Date endDate,
+            @RequestParam(required = false) List<String> paymentModes,
+            @RequestParam(required = false) List<String> statuses,
+            @RequestParam(required = false) List<String> cultivatorNames) {
+        List<DonationDetailsDTO> donations = donationService.getFilteredDonations(startDate, endDate, paymentModes,
+                statuses,
+                cultivatorNames);
+        return ResponseEntity.ok(donations);
+    }
+
     @GetMapping("/receipt/{donationId}")
     public ResponseEntity<?> getReceipt(@PathVariable Long donationId) {
         try {
@@ -142,18 +157,6 @@ public class DonationController {
         }
     }
 
-    @GetMapping("filtered")
-    public ResponseEntity<List<DonationDetailsDTO>> getFilteredDonations(
-            @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd") Date startDate,
-            @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd") Date endDate,
-            @RequestParam(required = false) List<String> paymentModes,
-            @RequestParam(required = false) List<String> statuses,
-            @RequestParam(required = false) List<String> cultivatorNames) {
-        List<DonationDetailsDTO> donations = donationService.getFilteredDonations(startDate, endDate, paymentModes,
-                statuses,
-                cultivatorNames);
-        return ResponseEntity.ok(donations);
-    }
 
     @PostMapping("/verify-payment")
     public ResponseEntity<String> verifyPayment(@RequestBody Map<String, Object> data) {
@@ -187,4 +190,5 @@ public class DonationController {
 
     }
 
+  
 }

@@ -1,10 +1,11 @@
 package com.iskcondhanbad.donordash.controller;
 
 import com.iskcondhanbad.donordash.model.Donor;
+
 import com.iskcondhanbad.donordash.service.DonorService;
-import com.iskcondhanbad.donordash.dto.DonorDTO;
 import com.iskcondhanbad.donordash.dto.DonorDetailsDto;
 import com.iskcondhanbad.donordash.dto.DonorSignupDto;
+import com.iskcondhanbad.donordash.dto.RegisteredDonorDetailsDto;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -63,7 +64,7 @@ public class DonorController {
     @GetMapping("/filter")
     public ResponseEntity<?> getDonors(@RequestParam(required = false) Integer donorCultivator) {
         try {
-            List<DonorDTO> donors = donorService.getDonors(donorCultivator);
+            List<DonorDetailsDto> donors = donorService.getDonors(donorCultivator);
             return ResponseEntity.ok(donors);
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(e.getMessage());
@@ -76,5 +77,11 @@ public class DonorController {
             @RequestParam(required = false) List<String> cultivatorNames) {
         List<DonorDetailsDto> donors = donorService.getDonorsByCultivators(cultivatorNames);
         return ResponseEntity.ok(donors);
+    }
+
+    @GetMapping("/check-by-mobile")
+    public ResponseEntity<RegisteredDonorDetailsDto> checkDonorByMobile(@RequestParam String mobileNumber) {
+        RegisteredDonorDetailsDto dto = donorService.getDonorByMobile(mobileNumber);
+        return ResponseEntity.ok(dto);
     }
 }

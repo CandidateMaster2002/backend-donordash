@@ -1,5 +1,6 @@
 package com.iskcondhanbad.donordash.service;
 
+import com.iskcondhanbad.donordash.controller.AddDonationResponseDto;
 import com.iskcondhanbad.donordash.dto.BulkEditResponseDto;
 import com.iskcondhanbad.donordash.dto.DonationDetailsDTO;
 import com.iskcondhanbad.donordash.dto.DonationDto;
@@ -9,6 +10,7 @@ import com.iskcondhanbad.donordash.model.Donor;
 import com.iskcondhanbad.donordash.model.DonorCultivator;
 import com.iskcondhanbad.donordash.repository.DonationRepository;
 import com.iskcondhanbad.donordash.repository.DonorRepository;
+import com.iskcondhanbad.donordash.repository.DonorCultivatorRepository;
 import com.iskcondhanbad.donordash.utils.Services;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
@@ -23,10 +25,11 @@ import com.iskcondhanbad.donordash.dto.DonationUpdateErrorDto;
 import com.iskcondhanbad.donordash.dto.EditDonationDto;
 import com.iskcondhanbad.donordash.dto.EditDonationDtoWithId;
 import com.iskcondhanbad.donordash.dto.ReceiptDto;
-
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -42,67 +45,94 @@ public class DonationService {
     @Autowired
     DonorCultivatorService donorCultivatorService;
 
+    @Autowired
+    DonorCultivatorRepository donorCultivatorRepository;
+
     @PersistenceContext
     private EntityManager entityManager;
 
-    public Donation donate(DonationDto donationDto) throws Exception {
-        Donor donor = donorRepository.findById(donationDto.getDonorId())
-                .orElseThrow(() -> new Exception("Donor not found"));
-
-        Donation donation = new Donation();
-        donation.setAmount(donationDto.getAmount());
-        donation.setPurpose(donationDto.getPurpose());
-        donation.setPaymentMode(donationDto.getPaymentMode());
-        donation.setTransactionId(donationDto.getTransactionId());
-        donation.setStatus(donationDto.getStatus());
-        donation.setRemark(donationDto.getRemark());
-        donation.setDonor(donor);
-        donation.setCreatedAt(donationDto.getCreatedAt() != null ? donationDto.getCreatedAt() : new Date());
-        donation.setReceiptId(donationDto.getReceiptId());
-        donation.setVerifiedAt(donationDto.getVerifiedAt());
-        donation.setPaymentDate(donationDto.getPaymentDate() != null ? donationDto.getPaymentDate()
-                : (donationDto.getCreatedAt() != null ? donationDto.getCreatedAt() : new Date()));
-
-        return donationRepository.save(donation);
+    public DonorCultivator getDonorCultivatorByDonor(Donor donor) {
+        if (donor == null) {
+            return null;
+        }
+        return donor.getDonorCultivator();
     }
 
-    public BulkEditResponseDto bulkEditDonations(List<EditDonationDtoWithId> donationUpdates) {
-    List<Donation> successfulUpdates = new ArrayList<>();
-    List<DonationUpdateErrorDto> errors = new ArrayList<>();
+    public DonorCultivator getDonorCultivatorById(Integer donorCultivatorId) {
+        return donorCultivatorRepository.findById(donorCultivatorId).orElse(null);
+    }
+public AddDonationResponseDto donate(DonationDto donationDto) throws Exception {
+    Donor donor = donorRepository.findById(donationDto.getDonorId())
+            .orElseThrow(() -> new Exception("Donor not found"));
 
-    for (EditDonationDtoWithId dto : donationUpdates) {
-        try {
-            // First update editable fields
-            EditDonationDto editDto = new EditDonationDto();
-            editDto.setAmount(dto.getAmount());
-            editDto.setPurpose(dto.getPurpose());
-            editDto.setPaymentMode(dto.getPaymentMode());
-            editDto.setTransactionId(dto.getTransactionId());
-            editDto.setRemark(dto.getRemark());
-
-            Donation updatedDonation = editDonation(dto.getDonationId(), editDto);
-
-            // If status is provided, try changing it
-            if (dto.getStatus() != null) {
-                updatedDonation = changeStatus(dto.getDonationId(), dto.getStatus());
-            }
-
-            successfulUpdates.add(updatedDonation);
-        } catch (Exception e) {
-            errors.add(new DonationUpdateErrorDto(dto.getDonationId(), e.getMessage()));
+    if (!"Cancelled".equalsIgnoreCase(donationDto.getStatus()) && donationDto.getTransactionId() != null) {
+        Optional<Donation> existingDonation = donationRepository.findByTransactionId(donationDto.getTransactionId());
+        if (existingDonation.isPresent()) {
+            return new AddDonationResponseDto(true, existingDonation.get());
         }
     }
 
-    return new BulkEditResponseDto(successfulUpdates, errors);
+    Donation donation = new Donation();
+    donation.setAmount(donationDto.getAmount());
+    donation.setPurpose(donationDto.getPurpose());
+    donation.setPaymentMode(donationDto.getPaymentMode());
+    donation.setTransactionId(donationDto.getTransactionId());
+    donation.setStatus(donationDto.getStatus());
+    donation.setRemark(donationDto.getRemark());
+    donation.setDonor(donor);
+    donation.setCreatedAt(donationDto.getCreatedAt() != null ? donationDto.getCreatedAt() : new Date());
+    donation.setReceiptId(donationDto.getReceiptId());
+    donation.setVerifiedAt(donationDto.getVerifiedAt());
+
+    if (donationDto.getCollectedById() != null) {
+        DonorCultivator collectedBy = getDonorCultivatorById(donationDto.getCollectedById());
+        donation.setCollectedBy(collectedBy);
+    } else {
+        donation.setCollectedBy(getDonorCultivatorByDonor(donor));
+    }
+
+    donation.setPaymentDate(donationDto.getPaymentDate() != null
+            ? donationDto.getPaymentDate()
+            : (donationDto.getCreatedAt() != null ? donationDto.getCreatedAt() : new Date()));
+
+    Donation savedDonation = donationRepository.save(donation);
+    return new AddDonationResponseDto(false, savedDonation);
 }
 
+    public BulkEditResponseDto bulkEditDonations(List<EditDonationDtoWithId> donationUpdates) {
+        List<Donation> successfulUpdates = new ArrayList<>();
+        List<DonationUpdateErrorDto> errors = new ArrayList<>();
 
-   
+        for (EditDonationDtoWithId dto : donationUpdates) {
+            try {
+                // First update editable fields
+                EditDonationDto editDto = new EditDonationDto();
+                editDto.setAmount(dto.getAmount());
+                editDto.setPurpose(dto.getPurpose());
+                editDto.setPaymentMode(dto.getPaymentMode());
+                editDto.setTransactionId(dto.getTransactionId());
+                editDto.setRemark(dto.getRemark());
+
+                Donation updatedDonation = editDonation(dto.getDonationId(), editDto);
+
+                // If status is provided, try changing it
+                if (dto.getStatus() != null) {
+                    updatedDonation = changeStatus(dto.getDonationId(), dto.getStatus());
+                }
+
+                successfulUpdates.add(updatedDonation);
+            } catch (Exception e) {
+                errors.add(new DonationUpdateErrorDto(dto.getDonationId(), e.getMessage()));
+            }
+        }
+
+        return new BulkEditResponseDto(successfulUpdates, errors);
+    }
 
     @Transactional(readOnly = true)
-    public List<DonationDetailsDTO> getFilteredDonations(Date startDate, Date endDate, List<String> paymentModes, List <String> donationStatuses, List<String> cultivatorNames) {
+    public List<DonationDetailsDTO> getFilteredDonations(Date startDate, Date endDate, List<String> paymentModes,
+            List<String> donationStatuses, List<String> cultivatorNames) {
 
-       
         CriteriaBuilder cb = entityManager.getCriteriaBuilder();
         CriteriaQuery<Donation> query = cb.createQuery(Donation.class);
         Root<Donation> donationRoot = query.from(Donation.class);
@@ -112,15 +142,13 @@ public class DonationService {
 
         List<Predicate> predicates = new ArrayList<>();
 
-
-
         if (startDate != null) {
             predicates.add(cb.greaterThanOrEqualTo(donationRoot.get("paymentDate"), startDate));
         }
         if (endDate != null) {
             predicates.add(cb.lessThanOrEqualTo(donationRoot.get("paymentDate"), endDate));
         }
-         if (donationStatuses != null && !donationStatuses.isEmpty()) {
+        if (donationStatuses != null && !donationStatuses.isEmpty()) {
             predicates.add(donationRoot.get("status").in(donationStatuses));
         }
 
@@ -143,12 +171,12 @@ public class DonationService {
     private DonationDetailsDTO mapToDTO(Donation donation) {
         Donor donor = donation.getDonor();
         DonorCultivator cultivator = donor.getDonorCultivator();
-
         DonationDetailsDTO dto = new DonationDetailsDTO();
         dto.setDonationAmount(donation.getAmount());
         dto.setDonationPurpose(donation.getPurpose());
         dto.setPaymentMethod(donation.getPaymentMode());
         dto.setTransactionId(donation.getTransactionId());
+        dto.setDonationCollectedBy(donation.getCollectedBy() != null ? donation.getCollectedBy().getName() : "N/A");
         dto.setRemark(donation.getRemark());
         dto.setPaymentDate(donation.getPaymentDate());
         dto.setCreatedAt(donation.getCreatedAt());
@@ -168,12 +196,20 @@ public class DonationService {
         return dto;
     }
 
-   
-
     public Donation changeStatus(Long donationId, String newStatus) throws Exception {
         Donation donation = findDonationById(donationId);
 
         String currentStatus = donation.getStatus();
+
+        if ("Unapproved".equalsIgnoreCase(currentStatus)) {
+            if ("Razorpay".equalsIgnoreCase(donation.getPaymentMode())) {
+                newStatus = "Verified";
+            } else {
+                newStatus = "Pending";
+            }
+            donation.setStatus(newStatus);
+            return donationRepository.save(donation);
+        }
 
         if ("Cancelled".equalsIgnoreCase(currentStatus) || "Failed".equalsIgnoreCase(currentStatus)) {
             throw new Exception("Cannot change status of a Cancelled or Failed donation");
@@ -193,7 +229,7 @@ public class DonationService {
             donation.setVerifiedAt(new Date());
             // Only generate receipt id if donor's category is not "no_receipt"
             if (donation.getDonor() != null && donation.getDonor().getCategory() != null
-                    && !"no_receipt".equalsIgnoreCase(donation.getDonor().getCategory())) {
+                    && !"no_receipt".equalsIgnoreCase(donation.getDonor().getCategory()) && !donation.getNotGenerateReceipt()) {
                 donation.setReceiptId(generateReceiptId(donationId));
             }
         }
@@ -254,9 +290,12 @@ public class DonationService {
         if (filter.getDonorIds() != null && !filter.getDonorIds().isEmpty()) {
             predicates.add(donation.get("donor").get("id").in(filter.getDonorIds()));
         }
-        if (filter.getDonorCultivatorId() != null) {
+        if (filter.getCollectedById() != null) {
             predicates.add(
-                    cb.equal(donation.get("donor").get("donorCultivator").get("id"), filter.getDonorCultivatorId()));
+                cb.equal(donation.get("collectedBy").get("id"), filter.getCollectedById()));
+        }
+        if(filter.getDonorCultivatorId() != null && filter.getDonorCultivatorId() != 0) {
+            predicates.add(cb.equal(donation.get("donor").get("donorCultivator").get("id"), filter.getDonorCultivatorId()));
         }
         if (filter.getStatus() != null) {
             predicates.add(cb.equal(donation.get("status"), filter.getStatus()));
@@ -296,7 +335,10 @@ public class DonationService {
         dto.setReceiptId(donation.getReceiptId());
         dto.setVerifiedAt(donation.getVerifiedAt());
         dto.setPaymentDate(donation.getPaymentDate());
-        dto.setDonorCultivatorName(donation.getDonor().getDonorCultivator().getName());
+        dto.setCollectedByName(
+                donation.getCollectedBy() != null ? donation.getCollectedBy().getName() : null) ;
+        dto.setDonorCultivatorName(
+                donation.getDonor().getDonorCultivator() != null ? donation.getDonor().getDonorCultivator().getName() : null);
         return dto;
     }
 
@@ -359,7 +401,8 @@ public class DonationService {
     public DonorCultivator getDonorCultivatorByDonationId(Long donationId) throws Exception {
         try {
             Donation donation = findDonationById(donationId);
-            return donation.getDonor().getDonorCultivator();
+            return donation.getCollectedBy() != null ? donation.getCollectedBy()
+                    : getDonorCultivatorByDonor(donation.getDonor());
         } catch (Exception e) {
             System.err.println("Error retrieving donor cultivator by donation ID: " + e.getMessage());
             throw new Exception("Error retrieving donor cultivator by donation ID", e);
@@ -381,8 +424,10 @@ public class DonationService {
         receipt.setDonorAddress(donor.getAddress());
         receipt.setDonorPIN(donor.getPincode());
         receipt.setPurpose(donation.getPurpose());
-        receipt.setDonorCultivatorId(donor.getDonorCultivator() != null ? donor.getDonorCultivator().getId().toString() : null);
-        receipt.setDonorCultivatorName(donor.getDonorCultivator() != null ? donor.getDonorCultivator().getName() : null);
+        receipt.setDonorCultivatorId(
+                donor.getDonorCultivator() != null ? donor.getDonorCultivator().getId().toString() : null);
+        receipt.setDonorCultivatorName(
+                donor.getDonorCultivator() != null ? donor.getDonorCultivator().getName() : null);
         receipt.setPan(donor.getPanNumber());
         receipt.setMobile(donor.getMobileNumber());
         receipt.setEmail(donor.getEmail());

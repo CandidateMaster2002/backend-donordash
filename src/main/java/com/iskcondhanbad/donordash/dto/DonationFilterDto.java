@@ -15,6 +15,7 @@ public class DonationFilterDto {
     private Integer donorId;
     private List<Integer> donorIds; 
     private Integer donorCultivatorId;
+    private Integer collectedById;
     private String status;
     private String paymentMode;
 }

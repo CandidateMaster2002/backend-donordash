@@ -41,11 +41,20 @@ public class Donation {
     @JsonBackReference
     private Donor donor;
 
+
+    //this is by default the cultivator of the donor but can be someone else if told
+    @ManyToOne
+    @JoinColumn(name = "collected_by_id", nullable = true)  
+    private DonorCultivator collectedBy;
+
    @Column(nullable = false)
    private Date paymentDate;
    
     @Column(nullable = false)
     private Date createdAt;
+
+    @Column(nullable = true)
+    private Boolean notGenerateReceipt;
 
     @Column(nullable = true, unique = true)
     private String receiptId;
@@ -62,4 +71,6 @@ public class Donation {
             this.createdAt = new Date(); // Automatically sets creation date
         }
     }
+
+
 }

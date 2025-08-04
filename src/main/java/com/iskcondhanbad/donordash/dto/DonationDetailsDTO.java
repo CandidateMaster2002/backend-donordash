@@ -1,6 +1,7 @@
 package com.iskcondhanbad.donordash.dto;
-import lombok.Data;
 import java.util.Date;
+
+import lombok.Data;
 
 @Data
 public class DonationDetailsDTO {
@@ -19,6 +20,7 @@ public class DonationDetailsDTO {
     private String transactionId;
     private String remark;
     private String connectedTo;
+    private String donationCollectedBy;
     private String zone;
     private Date createdAt;
     private Date verifiedAt;

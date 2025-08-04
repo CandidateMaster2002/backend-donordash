@@ -17,4 +17,6 @@ public class DonationDto {
     private Date paymentDate;
     private String receiptId;
     private Date verifiedAt;
+    private Integer collectedById;
+    private Boolean notGenerateReceipt;
 }
