@@ -10,7 +10,7 @@ import static java.lang.System.getenv;
 
 
 @CrossOrigin
-@SpringBootApplication(exclude = { SecurityAutoConfiguration.class })
+@SpringBootApplication(exclude ={ SecurityAutoConfiguration.class })
 public class DonordashApplication {
 
 	public static void main(String[] args) {
