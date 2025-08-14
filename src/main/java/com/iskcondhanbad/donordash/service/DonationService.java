@@ -74,7 +74,7 @@ public class DonationService {
             }
         }
 
-        
+
 
         Donation donation = new Donation();
         donation.setAmount(donationDto.getAmount());
@@ -87,13 +87,11 @@ public class DonationService {
         } else {
             donation.setCollectedBy(getDonorCultivatorByDonor(donor));
         }
-        if (donationDto.getCollectedById() != null && donor.getDonorCultivator() != null
-            && !donationDto.getCollectedById().equals(donor.getDonorCultivator().getId())) {
+        if (!donation.getCollectedBy().getId().equals(getDonorCultivatorByDonor(donor).getId())) {
             donation.setStatus("Unapproved");
         } else {
             donation.setStatus(donationDto.getStatus());
         }
-        donation.setStatus(donationDto.getStatus());
         donation.setRemark(donationDto.getRemark());
         donation.setDonor(donor);
         donation.setCreatedAt(donationDto.getCreatedAt() != null ? donationDto.getCreatedAt() : new Date());
