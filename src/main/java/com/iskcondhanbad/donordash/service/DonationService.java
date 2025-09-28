@@ -73,9 +73,6 @@ public class DonationService {
                 return new AddDonationResponseDto(true, existingDonation.get());
             }
         }
-
-
-
         Donation donation = new Donation();
         donation.setAmount(donationDto.getAmount());
         donation.setPurpose(donationDto.getPurpose());
@@ -97,6 +94,9 @@ public class DonationService {
         donation.setCreatedAt(donationDto.getCreatedAt() != null ? donationDto.getCreatedAt() : new Date());
         donation.setReceiptId(donationDto.getReceiptId());
         donation.setVerifiedAt(donationDto.getVerifiedAt());
+        donation.setNotGenerateReceipt(donationDto.getNotGenerateReceipt() != null
+                ? donationDto.getNotGenerateReceipt()
+                : false);
 
         donation.setPaymentDate(donationDto.getPaymentDate() != null
                 ? donationDto.getPaymentDate()
@@ -119,6 +119,8 @@ public class DonationService {
                 editDto.setPaymentMode(dto.getPaymentMode());
                 editDto.setTransactionId(dto.getTransactionId());
                 editDto.setRemark(dto.getRemark());
+                editDto.setCostCenter(dto.getCostCenter());
+
 
                 Donation updatedDonation = editDonation(dto.getDonationId(), editDto);
 
@@ -208,23 +210,18 @@ public class DonationService {
 
         String currentStatus = donation.getStatus();
 
-        if ("Unapproved".equalsIgnoreCase(currentStatus)) {
-            if ("Razorpay".equalsIgnoreCase(donation.getPaymentMode())) {
-                newStatus = "Verified";
-            } else {
-                newStatus = "Pending";
-            }
-            donation.setStatus(newStatus);
+        if ("Unapproved".equalsIgnoreCase(currentStatus)&&"Razorpay".equalsIgnoreCase(donation.getPaymentMode())) {
+            donation.setStatus("Verified");
             return donationRepository.save(donation);
         }
 
-        if ("Cancelled".equalsIgnoreCase(currentStatus) || "Failed".equalsIgnoreCase(currentStatus)) {
-            throw new Exception("Cannot change status of a Cancelled or Failed donation");
-        }
+        // if ("Cancelled".equalsIgnoreCase(currentStatus) || "Failed".equalsIgnoreCase(currentStatus)) {
+        //     throw new Exception("Cannot change status of a Cancelled or Failed donation");
+        // }
 
-        if ("Verified".equalsIgnoreCase(currentStatus) && !"Cancelled".equalsIgnoreCase(newStatus)) {
-            throw new Exception("Verified status can only be changed to Cancelled");
-        }
+        // if ("Verified".equalsIgnoreCase(currentStatus) && !"Cancelled".equalsIgnoreCase(newStatus)) {
+        //     throw new Exception("Verified status can only be changed to Cancelled");
+        // }
 
         if ("Verified".equalsIgnoreCase(newStatus) && donation.getTransactionId() == null
                 && !"Cash".equalsIgnoreCase(donation.getPaymentMode())) {
@@ -232,12 +229,15 @@ public class DonationService {
         }
 
         donation.setStatus(newStatus);
+        if(newStatus.equalsIgnoreCase("Cancelled")) {
+          donation.setTransactionId(donation.getTransactionId() + "-CANCELLED");
+        }
         if ("Verified".equalsIgnoreCase(newStatus)) {
             donation.setVerifiedAt(new Date());
             // Only generate receipt id if donor's category is not "no_receipt"
             if (donation.getDonor() != null && donation.getDonor().getCategory() != null
                     && !"no_receipt".equalsIgnoreCase(donation.getDonor().getCategory())
-                    && !donation.getNotGenerateReceipt()) {
+                    && donation.getNotGenerateReceipt()==null) {
                 donation.setReceiptId(generateReceiptId(donationId));
             }
         }
@@ -248,9 +248,9 @@ public class DonationService {
     public Donation editDonation(Long donationId, EditDonationDto editDonationDto) throws Exception {
         Donation donation = findDonationById(donationId);
 
-        if (!donation.getStatus().equalsIgnoreCase("Pending") && !donation.getStatus().equalsIgnoreCase("Verified")) {
-            throw new Exception("Cannot edit a donation with status other than Pending or Verified");
-        }
+        // if (donation.getStatus().equalsIgnoreCase("Cancelled") ||!donation.getStatus().equalsIgnoreCase("")) {
+        //     throw new Exception("Cannot edit a donation with status other than Pending or Verified");
+        // }
 
         if (editDonationDto.getPurpose() != null)
             donation.setPurpose(editDonationDto.getPurpose());
@@ -273,6 +273,10 @@ public class DonationService {
 
         if (donation.getPaymentMode().equalsIgnoreCase("Cash")) {
             donation.setTransactionId(null);
+        }
+
+        if (editDonationDto.getCostCenter() != null) {
+            donation.setCostCenter(editDonationDto.getCostCenter());
         }
 
         return donationRepository.save(donation);

@@ -62,6 +62,9 @@ public class Donation {
     @Column(nullable = true)
     private Date verifiedAt;
 
+    @Column(nullable = true)
+    private String costCenter;
+
     @PrePersist
     protected void onCreate() {
         if (this.status == null) {

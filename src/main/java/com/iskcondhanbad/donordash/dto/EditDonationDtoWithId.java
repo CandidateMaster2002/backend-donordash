@@ -13,4 +13,5 @@ public class EditDonationDtoWithId {
     private String transactionId;
     private String remark;
     private String status; // Optional
+    private String costCenter;
 }
