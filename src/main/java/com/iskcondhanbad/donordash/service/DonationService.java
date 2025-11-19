@@ -237,7 +237,7 @@ public class DonationService {
             // Only generate receipt id if donor's category is not "no_receipt"
             if (donation.getDonor() != null && donation.getDonor().getCategory() != null
                     && !"no_receipt".equalsIgnoreCase(donation.getDonor().getCategory())
-                    && donation.getNotGenerateReceipt()==null) {
+                    && donation.getNotGenerateReceipt()== false) {
                 donation.setReceiptId(generateReceiptId(donationId));
             }
         }
@@ -451,6 +451,10 @@ public class DonationService {
         receipt.setReceiptNumber(donation.getReceiptId());
 
         return receipt;
+    }
+
+    public void doDummyTask(){
+
     }
 
 }

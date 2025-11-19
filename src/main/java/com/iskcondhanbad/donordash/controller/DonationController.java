@@ -180,6 +180,16 @@ public ResponseEntity<?> donate(@RequestBody DonationDto donationDto) {
         }
     }
 
+    @PostMapping("/dummy")
+    public ResponseEntity<?> postDummy(@PathVariable Integer donorId) {
+        try {
+            List<Donation> donations = donationService.getDonationsByDonorId(donorId);
+            return ResponseEntity.ok(donations);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
     private String HmacSHA256(String data, String key) throws Exception {
         Mac sha256_HMAC = Mac.getInstance("HmacSHA256");
         SecretKeySpec secret_key = new SecretKeySpec(key.getBytes("UTF-8"), "HmacSHA256");
