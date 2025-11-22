@@ -11,7 +11,6 @@ import com.iskcondhanbad.donordash.model.DonorCultivator;
 import com.iskcondhanbad.donordash.repository.DonationRepository;
 import com.iskcondhanbad.donordash.repository.DonorRepository;
 import com.iskcondhanbad.donordash.repository.DonorCultivatorRepository;
-import com.iskcondhanbad.donordash.utils.Services;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import jakarta.persistence.criteria.CriteriaBuilder;
@@ -26,10 +25,8 @@ import com.iskcondhanbad.donordash.dto.EditDonationDto;
 import com.iskcondhanbad.donordash.dto.EditDonationDtoWithId;
 import com.iskcondhanbad.donordash.dto.ReceiptDto;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -283,6 +280,10 @@ public class DonationService {
 
     }
 
+    public List<DonationResponseDto> getAllDonations(){
+       return donationRepository.findAllDonationDtos();
+   }
+
     public List<DonationResponseDto> getDonationsByFilter(DonationFilterDto filter) {
         CriteriaBuilder cb = entityManager.getCriteriaBuilder();
         CriteriaQuery<Donation> query = cb.createQuery(Donation.class);
@@ -391,8 +392,8 @@ public class DonationService {
         return donationSummary;
     }
 
-    public List<Donation> getAllDonations(Integer cultivatorId, Date dateFrom, Date dateTo) {
-        return donationRepository.findAllDonations(cultivatorId, dateFrom, dateTo);
+    public List<Donation> getAllDonationsByCultivatorInGivenRange(Integer cultivatorId, Date dateFrom, Date dateTo) {
+        return donationRepository.findAllDonationsByCultivatorInGivenRange(cultivatorId, dateFrom, dateTo);
     }
 
     public String generateReceiptId(Long donationId) throws Exception {

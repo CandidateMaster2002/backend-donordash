@@ -11,6 +11,7 @@ import com.iskcondhanbad.donordash.dto.ReceiptDto;
 import com.iskcondhanbad.donordash.model.Donation;
 import com.iskcondhanbad.donordash.service.DonationService;
 import com.razorpay.RazorpayClient;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.binary.Hex;
 import org.springframework.beans.factory.annotation.Value;
 import org.json.JSONObject;
@@ -18,11 +19,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.time.Instant;
 import java.util.*;
 import com.razorpay.Order;
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 
+@Slf4j
 @RestController
 @RequestMapping("/donation")
 public class DonationController {
@@ -81,6 +85,16 @@ public ResponseEntity<?> donate(@RequestBody DonationDto donationDto) {
     public ResponseEntity<?> getDonationsByFilter(@RequestBody DonationFilterDto filter) {
         try {
             List<DonationResponseDto> donations = donationService.getDonationsByFilter(filter);
+            return ResponseEntity.ok(donations);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    @GetMapping("all")
+    public ResponseEntity<?> getAllDonations() {
+        try {
+            List<DonationResponseDto> donations = donationService.getAllDonations();
             return ResponseEntity.ok(donations);
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(e.getMessage());

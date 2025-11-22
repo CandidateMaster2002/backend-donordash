@@ -1,5 +1,6 @@
 package com.iskcondhanbad.donordash.repository;
 
+import com.iskcondhanbad.donordash.dto.DonationResponseDto;
 import com.iskcondhanbad.donordash.model.Donation;
 
 import java.util.List;
@@ -18,9 +19,36 @@ public interface DonationRepository extends JpaRepository<Donation, Long> {
            "WHERE (:cultivatorId IS NULL OR d.collectedBy.id = :cultivatorId) " +
            "AND (:dateFrom IS NULL OR d.createdAt >= :dateFrom) " +
            "AND (:dateTo IS NULL OR d.createdAt <= :dateTo)")
-    List<Donation> findAllDonations(@Param("cultivatorId") Integer cultivatorId,
+    List<Donation> findAllDonationsByCultivatorInGivenRange(@Param("cultivatorId") Integer cultivatorId,
                                     @Param("dateFrom") Date dateFrom,
                                     @Param("dateTo") Date dateTo);
+
+    @Query("SELECT new com.iskcondhanbad.donordash.dto.DonationResponseDto(" +
+            "  d.id, " +                       // Long id
+            "  donor.name, " +                 // String donorName
+            "  d.amount, " +                   // Double amount
+            "  d.paymentDate, " +              // Date paymentDatDonationResponseDtoe  (typo name in DTO)
+            "  d.purpose, " +                  // String purpose
+            "  d.paymentMode, " +              // String paymentMode
+            "  d.transactionId, " +            // String transactionId
+            "  d.status, " +                   // String status
+            "  d.remark, " +                   // String remark
+            "  donor.id, " +                   // Integer donorId
+            "  d.createdAt, " +                // Date createdAt
+            "  d.paymentDate, " +              // Date paymentDate (DTO has this field as well)
+            "  d.receiptId, " +                // String receiptId
+            "  d.verifiedAt, " +               // Date verifiedAt
+            "  dc.name, " +                    // String donorCultivatorName
+            "  collectedBy.name " +            // String collectedByName
+            ") " +
+            "FROM Donation d " +
+            "LEFT JOIN d.donor donor " +
+            "LEFT JOIN donor.donorCultivator dc " +
+            "LEFT JOIN d.collectedBy collectedBy " +
+            "ORDER BY d.createdAt DESC")
+    List<DonationResponseDto> findAllDonationDtos();
+
+
 
     Optional<Donation> findByTransactionId(String transactionId);
 
