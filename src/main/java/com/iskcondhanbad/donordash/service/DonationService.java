@@ -227,7 +227,11 @@ public class DonationService {
 
         donation.setStatus(newStatus);
         if(newStatus.equalsIgnoreCase("Cancelled")) {
-          donation.setTransactionId(donation.getTransactionId() + "-CANCELLED");
+            String txnId = donation.getTransactionId();
+            if (txnId == null || txnId.trim().isEmpty()) {
+                txnId = "TXN-" + donation.getId().toString();
+            }
+            donation.setTransactionId(txnId + "-CANCELLED");
         }
         if ("Verified".equalsIgnoreCase(newStatus)) {
             donation.setVerifiedAt(new Date());
