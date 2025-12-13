@@ -2,8 +2,10 @@ package com.iskcondhanbad.donordash.model;
 
 import jakarta.persistence.*;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
+import lombok.ToString;
 
 import java.util.List;
 
@@ -70,6 +72,8 @@ public class Donor {
 
     @JsonManagedReference
     @OneToMany(mappedBy = "donor")
+    @ToString.Exclude                // <- prevent infinite recursion in toString()
+    @EqualsAndHashCode.Exclude
     private List<Donation> donations;
 
     @JsonManagedReference

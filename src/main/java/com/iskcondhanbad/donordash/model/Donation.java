@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import com.fasterxml.jackson.annotation.JsonBackReference;
+import lombok.ToString;
 
 import java.util.Date;
 
@@ -39,6 +40,7 @@ public class Donation {
     @ManyToOne
     @JoinColumn(name = "donor_id", nullable = false)
     @JsonBackReference
+    @ToString.Exclude
     private Donor donor;
 
 

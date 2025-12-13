@@ -12,4 +12,5 @@ public class EditDonationDto {
     private String transactionId;
     private String remark;
     private String costCenter;
+    private Date paymentDate;
 }

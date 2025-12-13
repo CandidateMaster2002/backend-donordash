@@ -117,7 +117,7 @@ public class DonationService {
                 editDto.setTransactionId(dto.getTransactionId());
                 editDto.setRemark(dto.getRemark());
                 editDto.setCostCenter(dto.getCostCenter());
-
+                editDto.setPaymentDate(dto.getPaymentDate());
 
                 Donation updatedDonation = editDonation(dto.getDonationId(), editDto);
 
@@ -238,7 +238,7 @@ public class DonationService {
             // Only generate receipt id if donor's category is not "no_receipt"
             if (donation.getDonor() != null && donation.getDonor().getCategory() != null
                     && !"no_receipt".equalsIgnoreCase(donation.getDonor().getCategory())
-                    && donation.getNotGenerateReceipt()== false) {
+                    && donation.getNotGenerateReceipt() != Boolean.TRUE) {
                 donation.setReceiptId(generateReceiptId(donationId));
             }
         }
@@ -278,6 +278,10 @@ public class DonationService {
 
         if (editDonationDto.getCostCenter() != null) {
             donation.setCostCenter(editDonationDto.getCostCenter());
+        }
+
+        if(Objects.nonNull(editDonationDto.getPaymentDate())){
+            donation.setPaymentDate(editDonationDto.getPaymentDate());
         }
 
         return donationRepository.save(donation);
