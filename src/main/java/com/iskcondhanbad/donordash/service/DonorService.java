@@ -11,6 +11,8 @@ import com.iskcondhanbad.donordash.dto.RegisteredDonorDetailsDto;
 import com.iskcondhanbad.donordash.repository.DonorCultivatorRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
+import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.ArrayList;
@@ -34,7 +36,7 @@ public class DonorService {
         Optional<DonorCultivator> donorCultivatorOptional = donorCultivatorRepository
                 .findById(donorSignupDto.getDonorCultivatorId());
 
-        if (!donorCultivatorOptional.isPresent()) {
+        if (donorCultivatorOptional.isEmpty()) {
             throw new RuntimeException("Donor Cultivator not found");
         }
 
@@ -43,7 +45,12 @@ public class DonorService {
             donor.setUsername(donorSignupDto.getMobileNumber());
             donor.setCategory("Not Specified");
             donor.setType("One Timer");
-            donor.setEmail(donorSignupDto.getEmail());
+            if(Objects.isNull(donorSignupDto.getEmail()) || donorSignupDto.getEmail().isEmpty()){
+                donor.setEmail(null);
+            }
+            else {
+                donor.setEmail(donorSignupDto.getEmail());
+            }
             donor.setMobileNumber(donorSignupDto.getMobileNumber());
             donor.setPassword(donorSignupDto.getPassword());
             donor.setState(donorSignupDto.getState());
@@ -51,7 +58,6 @@ public class DonorService {
             donor.setZone(donorSignupDto.getZone());
             donor.setPincode(donorSignupDto.getPincode());
             donor.setAddress(donorSignupDto.getAddress());
-            donor.setEmail(donorSignupDto.getEmail());
             donor.setPanNumber(donorSignupDto.getPanNumber());
             donor.setRemark(donorSignupDto.getRemark());
             donor.setDonorCultivator(donorCultivatorOptional.get());

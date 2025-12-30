@@ -30,8 +30,7 @@ public class DonorController {
     @PostMapping("signup")
     public Donor signup(@RequestBody DonorSignupDto donorSignupDto) throws Exception {
         try {
-            Donor donor = donorService.saveDonor(donorSignupDto);
-            return donor;
+            return donorService.saveDonor(donorSignupDto);
         } catch (Exception e) {
             throw new RuntimeException("Error during donor signup", e);
         }
