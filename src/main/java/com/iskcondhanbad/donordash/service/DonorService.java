@@ -45,12 +45,7 @@ public class DonorService {
             donor.setUsername(donorSignupDto.getMobileNumber());
             donor.setCategory("Not Specified");
             donor.setType("One Timer");
-            if(Objects.isNull(donorSignupDto.getEmail()) || donorSignupDto.getEmail().isEmpty()){
-                donor.setEmail(null);
-            }
-            else {
-                donor.setEmail(donorSignupDto.getEmail());
-            }
+            donor.setEmail((Objects.isNull(donorSignupDto.getEmail()) || donorSignupDto.getEmail().isEmpty()) ? null : donorSignupDto.getEmail());
             donor.setMobileNumber(donorSignupDto.getMobileNumber());
             donor.setPassword(donorSignupDto.getPassword());
             donor.setState(donorSignupDto.getState());
@@ -84,9 +79,7 @@ public class DonorService {
             if (donorDto.getName() != null) {
                 donor.setName(donorDto.getName());
             }
-            if (donorDto.getEmail() != null) {
-                donor.setEmail(donorDto.getEmail());
-            }
+            donor.setEmail((Objects.isNull(donorDto.getEmail()) || donorDto.getEmail().isEmpty()) ? null : donorDto.getEmail());
             if (donorDto.getAddress() != null) {
                 donor.setAddress(donorDto.getAddress());
             }
@@ -99,9 +92,7 @@ public class DonorService {
             if (donorDto.getPincode() != null) {
                 donor.setPincode(donorDto.getPincode());
             }
-            if (donorDto.getPanNumber() != null) {
-                donor.setPanNumber(donorDto.getPanNumber());
-            }
+            donor.setPanNumber((Objects.isNull(donorDto.getPanNumber()) || donorDto.getPanNumber().isEmpty()) ? null : donorDto.getPanNumber());
             if (donorDto.getZone() != null) {
                 donor.setZone(donorDto.getZone());
             }

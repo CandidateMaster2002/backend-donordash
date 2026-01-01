@@ -13,8 +13,6 @@ import java.util.List;
 @NoArgsConstructor
 @Entity
 @Table(name = "donor")
-
-
 public class Donor {
 
     @Id
@@ -78,6 +76,8 @@ public class Donor {
 
     @JsonManagedReference
     @OneToMany(mappedBy = "donor")
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
     private List<SpecialDay> specialDays;
 
     // Getters and setters
