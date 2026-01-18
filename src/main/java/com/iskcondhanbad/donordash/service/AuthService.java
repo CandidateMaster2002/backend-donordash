@@ -47,7 +47,7 @@ public class AuthService {
             }
         }
 
-        DonorCultivator cultivator = donorCultivatorRepository.findByMobileNumber(mobileNumber);
+        StoredDonorCultivator cultivator = donorCultivatorRepository.findByMobileNumber(mobileNumber);
         if (cultivator != null) {
             if (cultivator.getPassword().equals(password)) {
                 return new LoginResponseDto("donorCultivator", cultivator);
@@ -56,7 +56,7 @@ public class AuthService {
             }
         }
 
-        Donor donor = donorRepository.findByMobileNumber(mobileNumber);
+        StoredDonor donor = donorRepository.findByMobileNumber(mobileNumber);
         if (donor != null) {
             if (donor.getPassword().equals(password)) {
                 return new LoginResponseDto("donor", donor);

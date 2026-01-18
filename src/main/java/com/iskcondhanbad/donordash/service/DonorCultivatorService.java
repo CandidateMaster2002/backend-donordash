@@ -7,7 +7,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
-import com.iskcondhanbad.donordash.model.DonorCultivator;
+import com.iskcondhanbad.donordash.model.StoredDonorCultivator;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class DonorCultivatorService {
@@ -15,20 +16,18 @@ public class DonorCultivatorService {
     @Autowired
     DonorCultivatorRepository donorCultivatorRepository;
 
-    public List<DonorCultivator> getAllDonorCultivators() {
-        try {
-            List<DonorCultivator> donorCultivators = donorCultivatorRepository.findAll();
-            if (donorCultivators.isEmpty()) {
-                throw new RuntimeException("No Donor Cultivators found.");
-            }
-            return donorCultivators;
-        } catch (Exception e) {
-            throw new RuntimeException("An error occurred while fetching Donor Cultivators: " + e.getMessage(), e);
+    @Transactional(readOnly = true)
+    public List<StoredDonorCultivator> getAllDonorCultivators() {
+        List<StoredDonorCultivator> donorCultivators = donorCultivatorRepository.findAll();
+        if (donorCultivators.isEmpty()) {
+            throw new RuntimeException("No donor cultivators found.");
         }
+        return donorCultivators;
     }
 
-    public DonorCultivator changeDonationsVerified(Integer donorCultivatorId,Integer newCount) throws Exception {
-        DonorCultivator donorCultivator = donorCultivatorRepository.findById(donorCultivatorId)
+
+    public StoredDonorCultivator changeDonationsVerified(Integer donorCultivatorId,Integer newCount) throws Exception {
+        StoredDonorCultivator donorCultivator = donorCultivatorRepository.findById(donorCultivatorId)
             .orElseThrow(() -> new Exception("Donor Cultivator not found with ID: " + donorCultivatorId));
         donorCultivator.setDonationsVerified(newCount); 
         donorCultivatorRepository.save(donorCultivator);

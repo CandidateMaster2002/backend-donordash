@@ -1,75 +1,81 @@
 package com.iskcondhanbad.donordash.controller;
 
-import com.iskcondhanbad.donordash.model.Donor;
+import com.iskcondhanbad.donordash.dto.*;
 
 import com.iskcondhanbad.donordash.service.DonorService;
-import com.iskcondhanbad.donordash.dto.DonorDetailsDto;
-import com.iskcondhanbad.donordash.dto.DonorSignupDto;
-import com.iskcondhanbad.donordash.dto.RegisteredDonorDetailsDto;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import com.iskcondhanbad.donordash.service.SpecialDayService;
 import java.util.List;
-import java.util.Optional;
 
+
+@Slf4j
 @RestController
 @RequestMapping("donor")
 public class DonorController {
 
     @Autowired
-    DonorService donorService;
+    private final DonorService donorService;
     @Autowired
-    SpecialDayService specialDayService;
+    private final SpecialDayService specialDayService;
 
     DonorController(DonorService donorService, SpecialDayService specialDayService) {
         this.donorService = donorService;
         this.specialDayService = specialDayService;
     }
 
-    @PostMapping("signup")
-    public Donor signup(@RequestBody DonorSignupDto donorSignupDto) throws Exception {
+    @PostMapping(value = "signup", consumes = "application/json", produces = "application/json")
+    public ResponseEntity<?> signup(@RequestBody CreateDonorRequest createDonorRequest) {
         try {
-            return donorService.saveDonor(donorSignupDto);
-        } catch (Exception e) {
-            throw new RuntimeException("Error during donor signup", e);
+            donorService.saveDonor(createDonorRequest);
+            return ResponseEntity.ok(new ApiResponse(true," Donor registered successfully"));
+        } catch (Exception ex) {
+            return ResponseEntity
+                    .badRequest()
+                    .body(new ApiResponse(false, ex.getMessage()));
         }
     }
 
-    @PutMapping("edit/{id}")
-    public ResponseEntity<?> updateDonor(@PathVariable Integer id, @RequestBody DonorSignupDto donorDto) {
+    @PutMapping(value = "edit/{id}", consumes = "application/json", produces = "application/json")
+    public ResponseEntity<ApiResponse> updateDonor(
+            @PathVariable Integer id,
+            @RequestBody CreateDonorRequest donorDto) {
         try {
-            Donor updatedDonor = donorService.updateDonor(id, donorDto);
-            return ResponseEntity.ok(updatedDonor);
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
+            donorService.updateDonor(id, donorDto);
+            return ResponseEntity.ok(new ApiResponse(true, "Donor updated successfully"));
+        } catch (Exception ex) {
+            return ResponseEntity
+                    .badRequest()
+                    .body(new ApiResponse(false, ex.getMessage()));
         }
     }
 
-    @GetMapping("by-id/{id}")
+
+    @GetMapping(value = "by-id/{id}", produces = "application/json")
     public ResponseEntity<?> getDonorById(@PathVariable Integer id) {
         try {
-            Optional<Donor> donor = donorService.getDonorById(id);
-            if (donor.isPresent()) {
-                return ResponseEntity.ok(donor.get());
-            } else {
-                return ResponseEntity.status(404).body("Donor not found with ID: " + id);
-            }
-        } catch (Exception e) {
-            return ResponseEntity.status(500).body("An error occurred while fetching the donor: " + e.getMessage());
+            return ResponseEntity.ok(donorService.getDonorById(id));
+        } catch (Exception ex) {
+            return ResponseEntity
+                    .status(500)
+                    .body(new ApiResponse(false, ex.getMessage()));
         }
     }
 
-    @GetMapping("/filter")
-    public ResponseEntity<?> getDonors(@RequestParam(required = false) Integer donorCultivator) {
+    @GetMapping(value = "/filter", produces = "application/json")
+    public ResponseEntity<?> getDonors(
+            @RequestParam(required = false) Integer donorCultivator) {
         try {
-            List<DonorDetailsDto> donors = donorService.getDonors(donorCultivator);
-            return ResponseEntity.ok(donors);
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
+            return ResponseEntity.ok(donorService.getDonors(donorCultivator));
+        } catch (Exception ex) {
+            return ResponseEntity
+                    .badRequest()
+                    .body(new ApiResponse(false, ex.getMessage()));
         }
     }
-    
+
 
     @GetMapping("/by-cultivator-names")
     public ResponseEntity<List<DonorDetailsDto>> getDonorsByCultivatorNames(
@@ -78,9 +84,15 @@ public class DonorController {
         return ResponseEntity.ok(donors);
     }
 
-    @GetMapping("/check-by-mobile")
-    public ResponseEntity<RegisteredDonorDetailsDto> checkDonorByMobile(@RequestParam String mobileNumber) {
-        RegisteredDonorDetailsDto dto = donorService.getDonorByMobile(mobileNumber);
-        return ResponseEntity.ok(dto);
+    @GetMapping(value = "/check-by-mobile", produces = "application/json")
+    public ResponseEntity<?> checkDonorByMobile(@RequestParam String mobileNumber) {
+        try {
+            return ResponseEntity.ok(donorService.getDonorByMobile(mobileNumber));
+        } catch (Exception ex) {
+            return ResponseEntity
+                    .status(500)
+                    .body(new ApiResponse(false,"An error occurred while checking donor details"));
+        }
     }
+
 }

@@ -6,7 +6,7 @@ import java.util.List;
 import lombok.Data;
 
 @Data
-public class DonorSignupDto {
+public class CreateDonorRequest {
 
     private String name;
     private String category;

@@ -1,17 +1,13 @@
 package com.iskcondhanbad.donordash.model;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import jakarta.persistence.*;
 import lombok.Data;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Column;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.JoinColumn;
 
 
 @Data
 @Entity
-public class DonorCultivator {
+@Table(name = "donor_cultivator")
+public class StoredDonorCultivator {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -42,7 +38,8 @@ public class DonorCultivator {
     @Column(name="donations_verified", nullable = false)
     private Integer donationsVerified;
 
-    @ManyToOne
+    @JsonIgnore
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "donation_supervisor_id", nullable = false)
     private DonationSupervisor donationSupervisor;
 

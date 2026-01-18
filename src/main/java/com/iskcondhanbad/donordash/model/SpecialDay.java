@@ -31,6 +31,6 @@ public class SpecialDay {
     @ManyToOne
     @JoinColumn(name = "donor_id", nullable = false)
     @JsonBackReference
-    private Donor donor;
+    private StoredDonor donor;
 
 }

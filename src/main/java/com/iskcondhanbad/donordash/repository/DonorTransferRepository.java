@@ -1,6 +1,5 @@
 package com.iskcondhanbad.donordash.repository;
 
-import com.iskcondhanbad.donordash.model.Donation;
 import com.iskcondhanbad.donordash.model.DonorTransfer;
 
 import java.util.List;

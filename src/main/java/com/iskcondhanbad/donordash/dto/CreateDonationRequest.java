@@ -1,18 +1,12 @@
 package com.iskcondhanbad.donordash.dto;
 
-import java.util.Date;
-import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.NoArgsConstructor;
+
+import java.util.Date;
 
 @Data
-@AllArgsConstructor
-@NoArgsConstructor
-public class DonationResponseDto {
-    private Long id;
-    private String donorName;
+public class CreateDonationRequest {
     private Double amount;
-    private Date paymentDatDonationResponseDtoe;
     private String purpose;
     private String paymentMode;
     private String transactionId;
@@ -23,7 +17,6 @@ public class DonationResponseDto {
     private Date paymentDate;
     private String receiptId;
     private Date verifiedAt;
-    private String donorCultivatorName;
-    private String collectedByName;
+    private Integer collectedById;
+    private Boolean notGenerateReceipt;
 }
-

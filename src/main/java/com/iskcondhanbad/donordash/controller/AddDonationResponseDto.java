@@ -1,11 +1,11 @@
 package com.iskcondhanbad.donordash.controller;
 
-import com.iskcondhanbad.donordash.model.Donation; // Add this import, adjust the package if needed
+import com.iskcondhanbad.donordash.model.StoredDonation; // Add this import, adjust the package if needed
 
 public class AddDonationResponseDto {
     private boolean alreadyExists;
-    Donation donation;
-    public AddDonationResponseDto(boolean alreadyExists, Donation donation) {
+    StoredDonation donation;
+    public AddDonationResponseDto(boolean alreadyExists, StoredDonation donation) {
         this.alreadyExists = alreadyExists;
         this.donation = donation;
     }
@@ -18,11 +18,11 @@ public class AddDonationResponseDto {
         this.alreadyExists = alreadyExists;
     }
 
-    public Donation getDonation() {
+    public StoredDonation getDonation() {
         return donation;
     }
 
-    public void setDonation(Donation donation) {
+    public void setDonation(StoredDonation donation) {
         this.donation = donation;
     }
 }

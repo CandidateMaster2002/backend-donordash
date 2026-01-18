@@ -1,7 +1,9 @@
 package com.iskcondhanbad.donordash.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import lombok.ToString;
@@ -12,8 +14,7 @@ import java.util.Date;
 @NoArgsConstructor
 @Entity
 @Table(name = "donation")
-
-public class Donation {
+public class StoredDonation {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -37,17 +38,20 @@ public class Donation {
     @Column(nullable = true)
     private String remark;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "donor_id", nullable = false)
-    @JsonBackReference
+    @JsonIgnore
     @ToString.Exclude
-    private Donor donor;
+    @EqualsAndHashCode.Exclude
+    private StoredDonor donor;
 
-
-    //this is by default the cultivator of the donor but can be someone else if told
-    @ManyToOne
-    @JoinColumn(name = "collected_by_id", nullable = true)  
-    private DonorCultivator collectedBy;
+    // this is by default the cultivator of the donor but can be someone else if told
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "collected_by_id")
+    @JsonIgnore
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
+    private StoredDonorCultivator collectedBy;
 
    @Column(nullable = false)
    private Date paymentDate;

@@ -1,5 +1,6 @@
 package com.iskcondhanbad.donordash.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -13,7 +14,7 @@ import java.util.List;
 @NoArgsConstructor
 @Entity
 @Table(name = "donor")
-public class Donor {
+public class StoredDonor {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -64,20 +65,25 @@ public class Donor {
     @Column(nullable = true)
     private String remark;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "donor_cultivator_id", nullable = false)
-    private DonorCultivator donorCultivator;
-
-    @JsonManagedReference
-    @OneToMany(mappedBy = "donor")
-    @ToString.Exclude                // <- prevent infinite recursion in toString()
-    @EqualsAndHashCode.Exclude
-    private List<Donation> donations;
-
-    @JsonManagedReference
-    @OneToMany(mappedBy = "donor")
+    @JsonIgnore
     @ToString.Exclude
     @EqualsAndHashCode.Exclude
+    private StoredDonorCultivator donorCultivator;
+
+    @JsonManagedReference
+    @OneToMany(mappedBy = "donor", fetch = FetchType.LAZY)
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
+    @JsonIgnore
+    private List<StoredDonation> donations;
+
+    @JsonManagedReference
+    @OneToMany(mappedBy = "donor", fetch = FetchType.LAZY)
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
+    @JsonIgnore
     private List<SpecialDay> specialDays;
 
     // Getters and setters

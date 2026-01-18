@@ -1,7 +1,7 @@
 package com.iskcondhanbad.donordash.service;
 
-import com.iskcondhanbad.donordash.dto.DonorSignupDto;
-import com.iskcondhanbad.donordash.model.Donor;
+import com.iskcondhanbad.donordash.dto.CreateDonorRequest;
+import com.iskcondhanbad.donordash.model.StoredDonor;
 import com.iskcondhanbad.donordash.repository.SpecialDayRepository;
 import com.iskcondhanbad.donordash.model.SpecialDay;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,10 +31,10 @@ public class SpecialDayService {
         }
     }
 
-    public void saveSpecialDay(DonorSignupDto donorSignupDto, Donor donor) throws Exception {
+    public void saveSpecialDay(CreateDonorRequest createDonorRequest, StoredDonor donor) throws Exception {
 
-        if (donorSignupDto.getSpecialDays() != null) {
-            donorSignupDto.getSpecialDays().forEach(specialDayDto -> {
+        if (createDonorRequest.getSpecialDays() != null) {
+            createDonorRequest.getSpecialDays().forEach(specialDayDto -> {
             if (specialDayDto.getDate() != null) {
             SpecialDay specialDay = new SpecialDay();
             specialDay.setDonor(donor);
@@ -47,12 +47,12 @@ public class SpecialDayService {
         }
     }
 
-    public void updateSpecialDay(DonorSignupDto donorSignupDto, Donor donor) throws Exception {
+    public void updateSpecialDay(CreateDonorRequest createDonorRequest, StoredDonor donor) throws Exception {
         List<SpecialDay> savedSpecialDays = specialDayRepository.findAllByDonorId(donor.getId());
         if (!savedSpecialDays.isEmpty()) {
             specialDayRepository.deleteAll(savedSpecialDays);
         }
-        saveSpecialDay(donorSignupDto, donor);
+        saveSpecialDay(createDonorRequest, donor);
     }
 
 

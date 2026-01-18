@@ -5,7 +5,7 @@ import java.util.List;
 
 import org.springframework.stereotype.Service;
 
-import com.iskcondhanbad.donordash.dto.DonorSignupDto;
+import com.iskcondhanbad.donordash.dto.CreateDonorRequest;
 
 class Donation {
   int id;
@@ -38,9 +38,9 @@ public class Services {
     donations.add(new Donation(2, "pending", new DonorCultivator("DEF", 0)));
   }
 
-  public String generateUsername(DonorSignupDto donorSignupDto,Integer id) {
-    String namePart = donorSignupDto.getName().length() > 15 ? donorSignupDto.getName().substring(0, 15) : donorSignupDto.getName();
-    String addressPart = donorSignupDto.getAddress().length() > 15 ? donorSignupDto.getAddress().substring(0, 15) : donorSignupDto.getAddress();
+  public String generateUsername(CreateDonorRequest createDonorRequest, Integer id) {
+    String namePart = createDonorRequest.getName().length() > 15 ? createDonorRequest.getName().substring(0, 15) : createDonorRequest.getName();
+    String addressPart = createDonorRequest.getAddress().length() > 15 ? createDonorRequest.getAddress().substring(0, 15) : createDonorRequest.getAddress();
     return id + "_" + namePart + "_" + addressPart;
   }
 

@@ -21,17 +21,17 @@ public class DonorTransfer {
 
     @ManyToOne
     @JoinColumn(name = "donor_id", nullable = false)
-    private Donor donor;
+    private StoredDonor donor;
 
     // Cultivator who requested the transfer
     @ManyToOne
     @JoinColumn(name = "requested_by", nullable = false)
-    private DonorCultivator requestedBy;
+    private StoredDonorCultivator requestedBy;
 
     // Cultivator who is being requested to give/take
     @ManyToOne
     @JoinColumn(name = "requested_to", nullable = false)
-    private DonorCultivator requestedTo;
+    private StoredDonorCultivator requestedTo;
 
     // ACQUIRE or RELEASE
     @Column(name = "request_type", nullable = false)

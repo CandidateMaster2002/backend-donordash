@@ -1,21 +1,17 @@
 package com.iskcondhanbad.donordash.service;
 
-import com.iskcondhanbad.donordash.model.Donor;
-import com.iskcondhanbad.donordash.model.DonorCultivator;
-import com.iskcondhanbad.donordash.model.DonorTransfer;
+import com.iskcondhanbad.donordash.dto.*;
+import com.iskcondhanbad.donordash.model.StoredDonor;
+import com.iskcondhanbad.donordash.model.StoredDonorCultivator;
 import com.iskcondhanbad.donordash.repository.DonorRepository;
-import com.iskcondhanbad.donordash.dto.DonorDTO;
-import com.iskcondhanbad.donordash.dto.DonorDetailsDto;
-import com.iskcondhanbad.donordash.dto.DonorSignupDto;
-import com.iskcondhanbad.donordash.dto.RegisteredDonorDetailsDto;
 import com.iskcondhanbad.donordash.repository.DonorCultivatorRepository;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 
-import java.util.Objects;
-import java.util.Optional;
 import java.util.stream.Collectors;
-import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -30,117 +26,87 @@ public class DonorService {
     @Autowired
     SpecialDayService specialDayService;
 
-    public Donor saveDonor(DonorSignupDto donorSignupDto) throws Exception {
+    @Transactional
+    public void saveDonor(CreateDonorRequest createDonorRequest) {
 
-        Donor donor = new Donor();
-        Optional<DonorCultivator> donorCultivatorOptional = donorCultivatorRepository
-                .findById(donorSignupDto.getDonorCultivatorId());
+        StoredDonorCultivator cultivator = donorCultivatorRepository
+                .findById(createDonorRequest.getDonorCultivatorId())
+                .orElseThrow(() -> new RuntimeException("Donor cultivator not found"));
 
-        if (donorCultivatorOptional.isEmpty()) {
-            throw new RuntimeException("Donor Cultivator not found");
-        }
+        StoredDonor donor = new StoredDonor();
 
-        try {
-            donor.setName(donorSignupDto.getName());
-            donor.setUsername(donorSignupDto.getMobileNumber());
-            donor.setCategory("Not Specified");
-            donor.setType("One Timer");
-            donor.setEmail((Objects.isNull(donorSignupDto.getEmail()) || donorSignupDto.getEmail().isEmpty()) ? null : donorSignupDto.getEmail());
-            donor.setMobileNumber(donorSignupDto.getMobileNumber());
-            donor.setPassword(donorSignupDto.getPassword());
-            donor.setState(donorSignupDto.getState());
-            donor.setCity(donorSignupDto.getCity());
-            donor.setZone(donorSignupDto.getZone());
-            donor.setPincode(donorSignupDto.getPincode());
-            donor.setAddress(donorSignupDto.getAddress());
-            donor.setPanNumber(donorSignupDto.getPanNumber());
-            donor.setRemark(donorSignupDto.getRemark());
-            donor.setDonorCultivator(donorCultivatorOptional.get());
-            donor = donorRepository.save(donor);
-            Integer donorId = donor.getId();
-            donor.setUsername(generateUsername(donorSignupDto, donorId));
-            donor = donorRepository.save(donor);
-            return donor;
-        } catch (Exception e) {
-            throw new Exception(e.getMessage());
-        }
-
+        donor.setName(createDonorRequest.getName());
+        donor.setCategory("Not Specified");
+        donor.setType("One Timer");
+        donor.setEmail(isBlank(createDonorRequest.getEmail()) ? null : createDonorRequest.getEmail());
+        donor.setMobileNumber(createDonorRequest.getMobileNumber());
+        donor.setPassword(createDonorRequest.getPassword());
+        donor.setState(createDonorRequest.getState());
+        donor.setCity(createDonorRequest.getCity());
+        donor.setZone(createDonorRequest.getZone());
+        donor.setPincode(createDonorRequest.getPincode());
+        donor.setAddress(createDonorRequest.getAddress());
+        donor.setPanNumber(createDonorRequest.getPanNumber());
+        donor.setRemark(createDonorRequest.getRemark());
+        donor.setDonorCultivator(cultivator);
+        donor.setUsername(generateUsername(createDonorRequest.getName(),createDonorRequest.getMobileNumber()));
+        donorRepository.save(donor);
     }
 
-    public Donor updateDonor(Integer donorId, DonorSignupDto donorDto) throws Exception {
-        Donor donor;
+    @Transactional
+    public void updateDonor(Integer donorId, CreateDonorRequest donorDto) throws Exception {
         try {
-            donor = findDonorById(donorId);
-        } catch (Exception e) {
-            throw new Exception("Error finding donor with ID: " + donorId, e);
-        }
+            StoredDonor donor = donorRepository.findById(donorId)
+                    .orElseThrow(() -> new RuntimeException("Donor not found with ID: " + donorId));
 
-        try {
-            if (donorDto.getName() != null) {
-                donor.setName(donorDto.getName());
-            }
-            donor.setEmail((Objects.isNull(donorDto.getEmail()) || donorDto.getEmail().isEmpty()) ? null : donorDto.getEmail());
-            if (donorDto.getAddress() != null) {
-                donor.setAddress(donorDto.getAddress());
-            }
-            if (donorDto.getCity() != null) {
-                donor.setCity(donorDto.getCity());
-            }
-            if (donorDto.getState() != null) {
-                donor.setState(donorDto.getState());
-            }
-            if (donorDto.getPincode() != null) {
-                donor.setPincode(donorDto.getPincode());
-            }
-            donor.setPanNumber((Objects.isNull(donorDto.getPanNumber()) || donorDto.getPanNumber().isEmpty()) ? null : donorDto.getPanNumber());
-            if (donorDto.getZone() != null) {
-                donor.setZone(donorDto.getZone());
-            }
-            if (donorDto.getCategory() != null) {
-                donor.setCategory(donorDto.getCategory());
-            }
-            if (donorDto.getRemark() != null) {
-                donor.setRemark(donorDto.getRemark());
-            }
+            // Update fields only if they are not null/empty
+            if (StringUtils.hasText(donorDto.getName())) donor.setName(donorDto.getName());
+            donor.setEmail(StringUtils.hasText(donorDto.getEmail()) ? donorDto.getEmail() : null);
+            if (StringUtils.hasText(donorDto.getAddress())) donor.setAddress(donorDto.getAddress());
+            if (StringUtils.hasText(donorDto.getCity())) donor.setCity(donorDto.getCity());
+            if (StringUtils.hasText(donorDto.getState())) donor.setState(donorDto.getState());
+            if (donorDto.getPincode() != null) donor.setPincode(donorDto.getPincode());
+            donor.setPanNumber(StringUtils.hasText(donorDto.getPanNumber()) ? donorDto.getPanNumber() : null);
+            if (StringUtils.hasText(donorDto.getZone())) donor.setZone(donorDto.getZone());
+            if (StringUtils.hasText(donorDto.getCategory())) donor.setCategory(donorDto.getCategory());
+            if (StringUtils.hasText(donorDto.getRemark())) donor.setRemark(donorDto.getRemark());
 
-            donorRepository.save(donor);
-            specialDayService.updateSpecialDay(donorDto, donor);
-            return donor;
+            // Update special days if provided
+            if (donorDto.getSpecialDays() != null && !donorDto.getSpecialDays().isEmpty()) {
+                specialDayService.updateSpecialDay(donorDto, donor);
+            }
         } catch (Exception e) {
             throw new Exception("Error updating donor with ID: " + donorId, e);
         }
     }
 
-    public Donor findDonorById(Integer donorId) throws Exception {
-        return donorRepository.findById(donorId)
-                .orElseThrow(() -> new Exception("Donor not found with ID: " + donorId));
+
+    @Transactional(readOnly = true)
+    public List<Donor> getDonors(Integer cultivatorId) {
+        return donorRepository.findDonors(cultivatorId);
     }
 
- public List<DonorDetailsDto> getDonors(Integer cultivatorId) {
-    if (cultivatorId != null) {
-        return donorRepository.findAllByDonorCultivatorId(cultivatorId);
-    } else {
-        return donorRepository.findAllDonorDetails();
-    }
-}
-    public Optional<Donor> getDonorById(Integer id) {
-        return donorRepository.findById(id);
+    @Transactional(readOnly = true)
+    public Donor getDonorById(Integer id) {
+        return donorRepository.findDonorById(id)
+                .orElseThrow(() -> new RuntimeException("Donor not found with id: " + id));
     }
 
-    public String generateUsername(DonorSignupDto donorSignupDto, Integer id) {
-        String namePart = donorSignupDto.getName().length() > 15
-                ? donorSignupDto.getName().substring(0, 15)
-                : donorSignupDto.getName();
 
-        String addressPart = donorSignupDto.getAddress().length() > 15
-                ? donorSignupDto.getAddress().substring(0, 15)
-                : donorSignupDto.getAddress();
-
-        return id + "," + namePart + "," + addressPart;
-    }
+//    public String generateUsername(CreateDonorRequest createDonorRequest, Integer id) {
+//        String namePart = createDonorRequest.getName().length() > 15
+//                ? createDonorRequest.getName().substring(0, 15)
+//                : createDonorRequest.getName();
+//
+//        String addressPart = createDonorRequest.getAddress().length() > 15
+//                ? createDonorRequest.getAddress().substring(0, 15)
+//                : createDonorRequest.getAddress();
+//
+//        return id + "," + namePart + "," + addressPart;
+//    }
 
     public List<DonorDetailsDto> getDonorsByCultivators(List<String> cultivatorNames) {
-        List<Donor> donors = donorRepository
+        List<StoredDonor> donors = donorRepository
                 .findByCultivatorNames(cultivatorNames == null || cultivatorNames.isEmpty() ? null : cultivatorNames);
 
         return donors.stream().map(d -> new DonorDetailsDto(
@@ -157,37 +123,70 @@ public class DonorService {
                 d.getType(),
                 d.getUsername(),
                 d.getRemark()
-                )).collect(Collectors.toList());
+        )).collect(Collectors.toList());
     }
 
-      public RegisteredDonorDetailsDto getDonorByMobile(String mobileNumber) {
-        RegisteredDonorDetailsDto dto = new RegisteredDonorDetailsDto();
-        Donor donor = donorRepository.findByMobileNumber(mobileNumber);
-        if (donor!=null) {
-            dto.setDonorRegistered(true);
-            dto.setId(donor.getId());
-            dto.setName(donor.getName());
-            dto.setUsername(donor.getUsername());
-            dto.setType(donor.getType());
-            dto.setCategory(donor.getCategory());
-            dto.setEmail(donor.getEmail());
-            dto.setMobileNumber(donor.getMobileNumber());
-            dto.setState(donor.getState());
-            dto.setCity(donor.getCity());
-            dto.setZone(donor.getZone());
-            dto.setPincode(donor.getPincode());
-            dto.setAddress(donor.getAddress());
-            dto.setPanNumber(donor.getPanNumber());
-            dto.setRemark(donor.getRemark());
-            dto.setDonorCultivatorId(donor.getDonorCultivator().getId());
-            dto.setDonorCultivatorName(donor.getDonorCultivator().getName());
-        } else {
+    @Transactional(readOnly = true)
+    public RegisteredDonorDetailsDto getDonorByMobile(String mobileNumber) {
+
+        StoredDonor donor = donorRepository.findByMobileNumber(mobileNumber);
+
+        if (donor == null) {
+            RegisteredDonorDetailsDto dto = new RegisteredDonorDetailsDto();
             dto.setDonorRegistered(false);
+            return dto;
         }
+
+        RegisteredDonorDetailsDto dto = new RegisteredDonorDetailsDto();
+        dto.setDonorRegistered(true);
+        dto.setId(donor.getId());
+        dto.setName(donor.getName());
+        dto.setMobileNumber(donor.getMobileNumber());
+        dto.setState(donor.getState());
+        dto.setCity(donor.getCity());
+        dto.setPincode(donor.getPincode());
+        dto.setAddress(donor.getAddress());
+        dto.setDonorCultivatorName(donor.getDonorCultivator().getName());
+
         return dto;
     }
 
 
+    private Donor toDomain(StoredDonor storedDonor) {
+        if (storedDonor == null) return null;
+
+        return Donor.builder()
+                .donorName(storedDonor.getName())
+                .wantPrasadam(false)
+                .category(storedDonor.getCategory())
+                .mobileNumber(storedDonor.getMobileNumber())
+                .email(storedDonor.getEmail())
+                .address(storedDonor.getAddress())
+                .city(storedDonor.getCity())
+                .state(storedDonor.getState())
+                .pincode(storedDonor.getPincode())
+                .panNumber(storedDonor.getPanNumber())
+                .cultivatorName(null)
+                .zone(storedDonor.getZone())
+                .remark(storedDonor.getRemark())
+                .type(storedDonor.getType())
+                .username(storedDonor.getUsername())
+                .supervisorName(null)
+                .build();
+    }
+
+    public String generateUsername(String name, String mobileNumber) {
+        if (name == null || name.isBlank() || mobileNumber == null || mobileNumber.isBlank()) {
+            throw new IllegalArgumentException("Name and mobile number must not be empty");
+        }
+
+        String firstWord = name.trim().split("\\s+")[0].toLowerCase();
+        return firstWord + "-" + mobileNumber.trim();
+    }
+
+    private boolean isBlank(String s) {
+        return s == null || s.trim().isEmpty();
+    }
 
 
 }

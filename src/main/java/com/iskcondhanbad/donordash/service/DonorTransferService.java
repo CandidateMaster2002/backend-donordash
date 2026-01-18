@@ -1,7 +1,7 @@
 package com.iskcondhanbad.donordash.service;
 
-import com.iskcondhanbad.donordash.model.Donor;
-import com.iskcondhanbad.donordash.model.DonorCultivator;
+import com.iskcondhanbad.donordash.model.StoredDonor;
+import com.iskcondhanbad.donordash.model.StoredDonorCultivator;
 import com.iskcondhanbad.donordash.model.DonorTransfer;
 import com.iskcondhanbad.donordash.repository.DonorRepository;
 import com.iskcondhanbad.donordash.repository.DonorTransferRepository;
@@ -30,13 +30,13 @@ public class DonorTransferService {
     }
 
     public DonorTransfer requestToAcquire(Integer donorId, Integer requestedById) {
-        Donor donor = donorRepository.findById(donorId)
-                .orElseThrow(() -> new RuntimeException("Donor not found"));
+        StoredDonor donor = donorRepository.findById(donorId)
+                .orElseThrow(() -> new RuntimeException("donor not found"));
 
         if(donorTransferRepository.findByDonorIdAndRequestedByIdAndRequestType(donorId, requestedById, "ACQUIRE").isPresent()) {
             throw new RuntimeException("A similar acquire request already exists");
         }
-        DonorCultivator requestedBy = donorCultivatorRepository.findById(requestedById)
+        StoredDonorCultivator requestedBy = donorCultivatorRepository.findById(requestedById)
                 .orElseThrow(() -> new RuntimeException("Requesting cultivator not found"));
 
         DonorTransfer transfer = new DonorTransfer();
@@ -55,12 +55,12 @@ if(donorTransferRepository.findByDonorIdAndRequestedByIdAndRequestType(donorId, 
             throw new RuntimeException("A similar release request already exists");
         }
 
-        Donor donor = donorRepository.findById(donorId)
-                .orElseThrow(() -> new RuntimeException("Donor not found"));
-        DonorCultivator from = donorCultivatorRepository.findById(fromId)
+        StoredDonor donor = donorRepository.findById(donorId)
+                .orElseThrow(() -> new RuntimeException("donor not found"));
+        StoredDonorCultivator from = donorCultivatorRepository.findById(fromId)
                 .orElseThrow(() -> new RuntimeException("Requesting cultivator not found"));
         
-        DonorCultivator to = donorCultivatorRepository.findById(toId)
+        StoredDonorCultivator to = donorCultivatorRepository.findById(toId)
                 .orElseThrow(() -> new RuntimeException("Target cultivator not found"));
 
         DonorTransfer transfer = new DonorTransfer();
@@ -82,7 +82,7 @@ if(donorTransferRepository.findByDonorIdAndRequestedByIdAndRequestType(donorId, 
             throw new RuntimeException("No matching acquire request found");
 
         DonorTransfer transfer = transferOpt.get();
-        Donor donor = transfer.getDonor();
+        StoredDonor donor = transfer.getDonor();
 
         donor.setDonorCultivator(transfer.getRequestedBy()); // requestedBy is new owner
         donorRepository.save(donor);
@@ -100,7 +100,7 @@ if(donorTransferRepository.findByDonorIdAndRequestedByIdAndRequestType(donorId, 
             throw new RuntimeException("No matching release request found");
 
         DonorTransfer transfer = transferOpt.get();
-        Donor donor = transfer.getDonor();
+        StoredDonor donor = transfer.getDonor();
 
         donor.setDonorCultivator(transfer.getRequestedTo()); // requestedTo is new owner
         donorRepository.save(donor);

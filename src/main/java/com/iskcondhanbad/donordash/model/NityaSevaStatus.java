@@ -15,7 +15,7 @@ public class NityaSevaStatus {
 
     @ManyToOne
     @JoinColumn(name = "donor_id", nullable = false)
-    private Donor donor;
+    private StoredDonor donor;
 
     @Column(nullable = false)
     private String month; // Format: MM-YYYY

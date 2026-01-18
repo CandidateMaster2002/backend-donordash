@@ -12,7 +12,7 @@ import com.iskcondhanbad.donordash.dto.NityaSevaDonorStatusDTO;
 import com.iskcondhanbad.donordash.dto.NityaSevaMonthStatusDTO;
 import com.iskcondhanbad.donordash.dto.NityaSevaStatusDTO;
 import com.iskcondhanbad.donordash.dto.UpdateNityaSevaStatusDTO;
-import com.iskcondhanbad.donordash.model.Donor;
+import com.iskcondhanbad.donordash.model.StoredDonor;
 import com.iskcondhanbad.donordash.model.NityaSevaStatus;
 import com.iskcondhanbad.donordash.repository.DonorRepository;
 import com.iskcondhanbad.donordash.repository.NityaSevaStatusRepository;
@@ -31,13 +31,13 @@ public class NityaSevaStatusService {
     private DonorRepository donorRepository;
 
     public List<NityaSevaDonorStatusDTO> getNityaSevaStatus(Integer cultivatorId) {
-        List<Donor> donors = cultivatorId == null
+        List<StoredDonor> donors = cultivatorId == null
                 ? donorRepository.findByType(NITYA_SEVAK_TYPE)
                 : donorRepository.findByTypeAndCultivatorId(NITYA_SEVAK_TYPE, cultivatorId);
 
         List<String> months = generateMonthsList();
 
-        List<Integer> donorIds = donors.stream().map(Donor::getId).collect(Collectors.toList());
+        List<Integer> donorIds = donors.stream().map(StoredDonor::getId).collect(Collectors.toList());
         List<NityaSevaStatus> existingStatuses = nityaSevaStatusRepository
                 .findByDonorIdInAndMonthIn(donorIds, months);
 
@@ -47,7 +47,7 @@ public class NityaSevaStatusService {
                         Function.identity()));
 
         List<NityaSevaDonorStatusDTO> result = new ArrayList<>();
-        for (Donor donor : donors) {
+        for (StoredDonor donor : donors) {
             List<NityaSevaMonthStatusDTO> monthStatuses = new ArrayList<>();
             for (String month : months) {
                 NityaSevaStatus status = statusMap.get(new AbstractMap.SimpleEntry<>(donor.getId(), month));
@@ -78,9 +78,9 @@ public class NityaSevaStatusService {
         } else {
             status = new NityaSevaStatus();
             // Assuming you have a method setDonorId or setDonor; adjust as per your model
-            Donor donor = donorRepository.findById(updateNityaSevaStatusDTO.getDonorId())
+            StoredDonor donor = donorRepository.findById(updateNityaSevaStatusDTO.getDonorId())
                     .orElseThrow(() -> new EntityNotFoundException(
-                            "Donor not found with id: " + updateNityaSevaStatusDTO.getDonorId()));
+                            "donor not found with id: " + updateNityaSevaStatusDTO.getDonorId()));
             status.setDonor(donor);
             status.setMonth(updateNityaSevaStatusDTO.getMonth());
             status.setNityaSeva(false);
