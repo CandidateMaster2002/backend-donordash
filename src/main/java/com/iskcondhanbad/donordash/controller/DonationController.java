@@ -26,15 +26,15 @@ public class DonationController {
     @Autowired
     DonationService donationService;
 
-  @PostMapping("/donate")
-public ResponseEntity<?> donate(@RequestBody CreateDonationRequest createDonationRequest) {
-    try {
-        AddDonationResponseDto addDonationResponseDto = donationService.donate(createDonationRequest);
-        return ResponseEntity.ok(addDonationResponseDto);
-    } catch (Exception e) {
-        return ResponseEntity.badRequest().body(e.getMessage());
-    }
-}
+      @PostMapping("/donate")
+      public ResponseEntity<?> donate(@RequestBody CreateDonationRequest createDonationRequest) {
+        try {
+            AddDonationResponseDto addDonationResponseDto = donationService.donate(createDonationRequest);
+            return ResponseEntity.ok(addDonationResponseDto);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+      }
 
 
     @GetMapping("/by-donor-id/{donorId}")
@@ -178,11 +178,10 @@ public ResponseEntity<?> donate(@RequestBody CreateDonationRequest createDonatio
         }
     }
 
-    @PostMapping("/dummy")
+    @GetMapping("/dummy/{donorId}")
     public ResponseEntity<?> postDummy(@PathVariable Integer donorId) {
         try {
-            List<StoredDonation> donations = donationService.getDonationsByDonorId(donorId);
-            return ResponseEntity.ok(donations);
+            return ResponseEntity.ok("Success");
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }

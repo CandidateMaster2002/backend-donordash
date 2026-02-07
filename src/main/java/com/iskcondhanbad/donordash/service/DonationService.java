@@ -55,13 +55,14 @@ public class DonationService {
         StoredDonor donor = donorRepository.findById(createDonationRequest.getDonorId())
                 .orElseThrow(() -> new RuntimeException("Donor not found"));
 
-        String transactionId = createDonationRequest.getTransactionId();
-        if (transactionId == null || transactionId.isBlank()) {
+        final String paymentMode = createDonationRequest.getPaymentMode();
+        final String transactionId = createDonationRequest.getTransactionId();
+        if (!"Cash".equalsIgnoreCase(paymentMode) && (Objects.isNull(transactionId) || transactionId.isBlank())) {
             throw new IllegalArgumentException("transactionId is required");
         }
 
         // check duplicate by transactionId (only when not cancelled)
-        if (!"Cancelled".equalsIgnoreCase(createDonationRequest.getStatus())) {
+        if (Objects.nonNull(transactionId)&&!"Cancelled".equalsIgnoreCase(createDonationRequest.getStatus())) {
             Optional<StoredDonation> existing = donationRepository.findByTransactionId(transactionId);
             if (existing.isPresent()) {
                 return new AddDonationResponseDto(true, existing.get());
@@ -209,10 +210,10 @@ public class DonationService {
 
         String currentStatus = donation.getStatus();
 
-        if ("Unapproved".equalsIgnoreCase(currentStatus)&&"Razorpay".equalsIgnoreCase(donation.getPaymentMode())) {
-            donation.setStatus("Verified");
-            return donationRepository.save(donation);
-        }
+//        if ("Unapproved".equalsIgnoreCase(currentStatus)&&"Razorpay".equalsIgnoreCase(donation.getPaymentMode())) {
+//            donation.setStatus("Verified");
+//            return donationRepository.save(donation);
+//        }
 
         // if ("Cancelled".equalsIgnoreCase(currentStatus) || "Failed".equalsIgnoreCase(currentStatus)) {
         //     throw new Exception("Cannot change status of a Cancelled or Failed donation");
