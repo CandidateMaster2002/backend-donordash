@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -57,19 +58,38 @@ public class DonationController {
         }
     }
 
-    @PutMapping("/bulk-edit")
-    public ResponseEntity<?> bulkEditDonations(@RequestBody List<EditDonationDtoWithId> donationUpdates) {
-        BulkEditResponseDto response = donationService.bulkEditDonations(donationUpdates);
-        return ResponseEntity.ok(response);
+//    @PutMapping("/bulk-edit")
+//    public ResponseEntity<?> bulkEditDonations(@RequestBody List<UpdateDonationRequest> donationUpdates) {
+//        BulkEditResponseDto response = donationService.bulkEditDonations(donationUpdates);
+//        return ResponseEntity.ok(response);
+//    }
+
+    @PutMapping(value = "/bulk-edit", consumes = "application/json", produces = "application/json")
+    public ResponseEntity<?> bulkEditDonations(@RequestBody List<UpdateDonationRequest> donationUpdates) {
+        return ResponseEntity.ok(donationService.bulkEditDonations(donationUpdates));
     }
 
-    @PutMapping("edit/{donationId}")
-    public ResponseEntity<?> editDonation(@PathVariable Long donationId, @RequestBody EditDonationDto editDonationDto) {
+//    @PutMapping("edit/{donationId}")
+//    public ResponseEntity<?> editDonation(@PathVariable Long donationId, @RequestBody EditDonationDto editDonationDto) {
+//        try {
+//            StoredDonation donation = donationService.editDonation(donationId, editDonationDto);
+//            return ResponseEntity.ok(donation);
+//        } catch (Exception e) {
+//            return ResponseEntity.badRequest().body(e.getMessage());
+//        }
+//    }
+
+    @PutMapping(value = "edit/{donationId}", consumes = "application/json", produces = "application/json")
+    public ResponseEntity<?> editDonation(@PathVariable Long donationId,
+                                          @RequestBody UpdateDonationRequest request) {
         try {
-            StoredDonation donation = donationService.editDonation(donationId, editDonationDto);
+            request.setDonationId(donationId);
+            StoredDonation donation = donationService.updateDonation(request);
             return ResponseEntity.ok(donation);
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
+        } catch (Exception ex) {
+            return ResponseEntity
+                    .badRequest()
+                    .body(new ApiResponse(false, ex.getMessage()));
         }
     }
 
@@ -85,17 +105,32 @@ public class DonationController {
     }
 
 
-    @GetMapping("/summary")
-    public ResponseEntity<Map<String, Double>> getDonationSummary(
-            @RequestParam String parameter,
-            @RequestParam(required = false) Integer cultivatorId,
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) Date dateFrom,
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) Date dateTo) {
+//    @GetMapping("/summary")
+//    public ResponseEntity<Map<String, Double>> getDonationSummary(
+//            @RequestParam String parameter,
+//            @RequestParam(required = false) Integer cultivatorId,
+//            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) Date dateFrom,
+//            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) Date dateTo) {
+//        try {
+//            Map<String, Double> summary = donationService.getDonationSumBy(parameter, cultivatorId, dateFrom, dateTo);
+//            return ResponseEntity.ok(summary);
+//        } catch (IllegalArgumentException e) {
+//            return ResponseEntity.badRequest().body(null);
+//        }
+//    }
+
+    @PostMapping(value = "/summary", consumes = "application/json", produces = "application/json")
+    public ResponseEntity<?> getDonationSummary(@RequestBody SummaryRequest summaryRequest) {
         try {
-            Map<String, Double> summary = donationService.getDonationSumBy(parameter, cultivatorId, dateFrom, dateTo);
-            return ResponseEntity.ok(summary);
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body(null);
+            return ResponseEntity.ok(donationService.getDonationSummaryBy(summaryRequest));
+        } catch (IllegalArgumentException ex) {
+            return ResponseEntity
+                    .badRequest()
+                    .body(new ApiResponse(false, ex.getMessage()));
+        } catch (Exception ex) {
+            return ResponseEntity
+                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new ApiResponse(false, "An unexpected error occurred"));
         }
     }
 
