@@ -424,7 +424,7 @@ public class DonationService {
         }
 
         String parameter = summaryRequest.getParameter();
-        Integer cultivatorId = summaryRequest.getCultivatorId();
+        Integer collectedById = summaryRequest.getCollectedById();
         Date dateFrom = summaryRequest.getDateFrom();
         Date dateTo = summaryRequest.getDateTo();
         String status = summaryRequest.getStatus();
@@ -438,15 +438,15 @@ public class DonationService {
 
         switch (param) {
             case Constants.PURPOSE:
-                results = donationRepository.findDonationSumByPurpose(cultivatorId, dateFrom, dateTo, status);
+                results = donationRepository.findDonationSumByPurpose(collectedById, dateFrom, dateTo, status);
                 break;
 
             case Constants.ZONE:
-                results = donationRepository.findDonationSumByZone(cultivatorId, dateFrom, dateTo, status);
+                results = donationRepository.findDonationSumByZone(collectedById, dateFrom, dateTo, status);
                 break;
 
             case Constants.PAYMENT_MODE:
-                results = donationRepository.findDonationSumByPaymentMode(cultivatorId, dateFrom, dateTo, status);
+                results = donationRepository.findDonationSumByPaymentMode(collectedById, dateFrom, dateTo, status);
                 break;
 
             case Constants.CULTIVATOR:

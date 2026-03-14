@@ -9,9 +9,7 @@ import java.util.Date;
 public class SummaryRequest {
 
     private String parameter;
-
-    private Integer cultivatorId;
-
+    private Integer collectedById;
     private String status;
 
     @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)

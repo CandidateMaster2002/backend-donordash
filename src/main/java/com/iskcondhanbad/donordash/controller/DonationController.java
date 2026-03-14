@@ -64,7 +64,7 @@ public class DonationController {
 //        return ResponseEntity.ok(response);
 //    }
 
-    @PutMapping(value = "/bulk-edit", consumes = "application/json", produces = "application/json")
+    @PutMapping(value = "/bulk-update", consumes = "application/json", produces = "application/json")
     public ResponseEntity<?> bulkEditDonations(@RequestBody List<UpdateDonationRequest> donationUpdates) {
         return ResponseEntity.ok(donationService.bulkEditDonations(donationUpdates));
     }
