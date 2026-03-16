@@ -94,41 +94,6 @@ public class DonationService {
         return new AddDonationResponseDto(false, saved);
     }
 
-
-
-//    @Transactional
-//    public BulkEditResponseDto bulkEditDonations(List<UpdateDonationRequest> donationUpdates) {
-//        List<StoredDonation> successfulUpdates = new ArrayList<>();
-//        List<DonationUpdateErrorDto> errors = new ArrayList<>();
-//
-//        for (UpdateDonationRequest dto : donationUpdates) {
-//            try {
-//                // First update editable fields
-//                EditDonationDto editDto = new EditDonationDto();
-//                editDto.setAmount(dto.getAmount());
-//                editDto.setPurpose(dto.getPurpose());
-//                editDto.setPaymentMode(dto.getPaymentMode());
-//                editDto.setTransactionId(dto.getTransactionId());
-//                editDto.setRemark(dto.getRemark());
-//                editDto.setCostCenter(dto.getCostCenter());
-//                editDto.setPaymentDate(dto.getPaymentDate());
-//
-//                StoredDonation updatedDonation = editDonation(dto.getDonationId(), editDto);
-//
-//                // If status is provided, try changing it
-//                if (Objects.nonNull(dto.getStatus())) {
-//                    updatedDonation = changeStatus(dto.getDonationId(), dto.getStatus());
-//                }
-//
-//                successfulUpdates.add(updatedDonation);
-//            } catch (Exception e) {
-//                errors.add(new DonationUpdateErrorDto(dto.getDonationId(), e.getMessage()));
-//            }
-//        }
-//
-//        return new BulkEditResponseDto(successfulUpdates, errors);
-//    }
-
     @Transactional(readOnly = true)
     public List<DonationDetailsDTO> getFilteredDonations(Date startDate, Date endDate, List<String> paymentModes,
             List<String> donationStatuses, List<String> cultivatorNames) {
@@ -202,26 +167,13 @@ public class DonationService {
 
         String currentStatus = donation.getStatus();
 
-//        if ("Unapproved".equalsIgnoreCase(currentStatus)&&"Razorpay".equalsIgnoreCase(donation.getPaymentMode())) {
-//            donation.setStatus("Verified");
-//            return donationRepository.save(donation);
-//        }
-
-        // if ("Cancelled".equalsIgnoreCase(currentStatus) || "Failed".equalsIgnoreCase(currentStatus)) {
-        //     throw new Exception("Cannot change status of a Cancelled or Failed donation");
-        // }
-
-        // if ("Verified".equalsIgnoreCase(currentStatus) && !"Cancelled".equalsIgnoreCase(newStatus)) {
-        //     throw new Exception("Verified status can only be changed to Cancelled");
-        // }
-
         if ("Verified".equalsIgnoreCase(newStatus) && Objects.isNull(donation.getTransactionId())
                 && !"Cash".equalsIgnoreCase(donation.getPaymentMode())) {
             throw new Exception("Cannot verify non-cash donation without a transaction ID");
         }
 
         donation.setStatus(newStatus);
-        if(newStatus.equalsIgnoreCase("Cancelled")) {
+        if(!currentStatus.equalsIgnoreCase("Cancelled") && newStatus.equalsIgnoreCase("Cancelled")) {
             String txnId = donation.getTransactionId();
             if (isBlank(txnId)) {
                 txnId = "TXN-" + donation.getId().toString();
@@ -240,49 +192,6 @@ public class DonationService {
 
         return donationRepository.save(donation);
     }
-
-//    @Transactional
-//    public StoredDonation editDonation(Long donationId, EditDonationDto editDonationDto) throws Exception {
-//        StoredDonation donation = findDonationById(donationId);
-//
-//        // if (donation.getStatus().equalsIgnoreCase("Cancelled") ||!donation.getStatus().equalsIgnoreCase("")) {
-//        //     throw new Exception("Cannot edit a donation with status other than Pending or Verified");
-//        // }
-//
-//        if (Objects.nonNull(editDonationDto.getPurpose()))
-//            donation.setPurpose(editDonationDto.getPurpose());
-//
-//        if (Objects.nonNull(editDonationDto.getAmount())) {
-//            donation.setAmount(editDonationDto.getAmount());
-//        }
-//
-//        if (Objects.nonNull(editDonationDto.getPaymentMode())) {
-//            donation.setPaymentMode(editDonationDto.getPaymentMode());
-//        }
-//
-//        if (Objects.nonNull(editDonationDto.getTransactionId())) {
-//            donation.setTransactionId(editDonationDto.getTransactionId());
-//        }
-//
-//        if (Objects.nonNull(editDonationDto.getRemark())) {
-//            donation.setRemark(editDonationDto.getRemark());
-//        }
-//
-//        if (donation.getPaymentMode().equalsIgnoreCase("Cash")) {
-//            donation.setTransactionId(null);
-//        }
-//
-//        if (Objects.nonNull(editDonationDto.getCostCenter())) {
-//            donation.setCostCenter(editDonationDto.getCostCenter());
-//        }
-//
-//        if(Objects.nonNull(editDonationDto.getPaymentDate())){
-//            donation.setPaymentDate(editDonationDto.getPaymentDate());
-//        }
-//
-//        return donationRepository.save(donation);
-//
-//    }
 
     @Transactional
     public BulkEditResponseDto bulkEditDonations(List<UpdateDonationRequest> donationUpdates) {
@@ -346,7 +255,6 @@ public class DonationService {
                 donation.getPaymentMode().equalsIgnoreCase("Cash")) {
             donation.setTransactionId(null);
         }
-
         return donation;
     }
 
@@ -389,33 +297,6 @@ public class DonationService {
     public List<StoredDonation> getDonationsByDonorId(Integer donorId) {
         return donationRepository.findByDonorId(donorId);
     }
-
-//    @Transactional
-//    public Map<String, Double> getDonationSumBy(String parameter, Integer cultivatorId, Date dateFrom, Date dateTo) {
-//        List<Object[]> results;
-//        switch (parameter.toLowerCase()) {
-//            case Constants.PURPOSE:
-//                results = donationRepository.findDonationSumByPurpose(cultivatorId, dateFrom, dateTo);
-//                break;
-//            case Constants.ZONE:
-//                results = donationRepository.findDonationSumByZone(cultivatorId, dateFrom, dateTo);
-//                break;
-//            case Constants.PAYMENT_MODE:
-//                results = donationRepository.findDonationSumByPaymentMode(cultivatorId, dateFrom, dateTo);
-//                break;
-//            case Constants.CULTIVATOR:
-//                results = donationRepository.findDonationSumByCultivator(dateFrom, dateTo);
-//                break;
-//            default:
-//                throw new IllegalArgumentException("Invalid parameter");
-//        }
-//
-//        Map<String, Double> donationSummary = new HashMap<>();
-//        for (Object[] result : results) {
-//            donationSummary.put((String) result[0], (Double) result[1]);
-//        }
-//        return donationSummary;
-//    }
 
     @Transactional(readOnly = true)
     public Map<String, Double> getDonationSummaryBy(SummaryRequest summaryRequest) {

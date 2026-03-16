@@ -4,7 +4,6 @@ import com.iskcondhanbad.donordash.dto.Donor;
 import com.iskcondhanbad.donordash.dto.DonorDTO;
 import com.iskcondhanbad.donordash.dto.DonorDetailsDto;
 import com.iskcondhanbad.donordash.model.StoredDonor;
-import com.iskcondhanbad.donordash.model.DonorTransfer;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -109,5 +108,4 @@ List<DonorDetailsDto> findAllDonorDetails();
                 where (:cultivatorId is null or c.id = :cultivatorId)
             """)
     List<Donor> findDonors(@Param("cultivatorId") Integer cultivatorId);
-
 }

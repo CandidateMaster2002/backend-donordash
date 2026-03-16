@@ -77,50 +77,6 @@ public interface DonationRepository extends JpaRepository<StoredDonation, Long> 
 
     List<StoredDonation> findByDonorId(Integer donorId);
 
-//    @Query("SELECT d.donor.zone, SUM(d.amount) FROM StoredDonation d " +
-//           "WHERE (:cultivatorId IS NULL OR d.collectedBy.id = :cultivatorId) " +
-//           "AND (:dateFrom IS NULL OR d.createdAt >= :dateFrom) " +
-//           "AND (:dateTo IS NULL OR d.createdAt <= :dateTo) " +
-//           "AND d.status = 'Verified' " +
-//           "GROUP BY d.donor.zone " +
-//           "ORDER BY SUM(d.amount) DESC")
-//    List<Object[]> findDonationSumByZone(@Param("cultivatorId") Integer cultivatorId,
-//                                         @Param("dateFrom") Date dateFrom,
-//                                         @Param("dateTo") Date dateTo);
-
-//    @Query("SELECT d.purpose, SUM(d.amount) FROM StoredDonation d " +
-//           "WHERE (:cultivatorId IS NULL OR d.collectedBy.id = :cultivatorId) " +
-//           "AND (:dateFrom IS NULL OR d.createdAt >= :dateFrom) " +
-//           "AND (:dateTo IS NULL OR d.createdAt <= :dateTo) " +
-//           "AND d.status = 'Verified' " +
-//           "GROUP BY d.purpose " +
-//           "ORDER BY SUM(d.amount) DESC")
-//    List<Object[]> findDonationSumByPurpose(@Param("cultivatorId") Integer cultivatorId,
-//                                            @Param("dateFrom") Date dateFrom,
-//                                            @Param("dateTo") Date dateTo);
-//
-//
-//    @Query("SELECT d.paymentMode, SUM(d.amount) FROM StoredDonation d " +
-//           "WHERE (:cultivatorId IS NULL OR d.collectedBy.id = :cultivatorId) " +
-//           "AND (:dateFrom IS NULL OR d.createdAt >= :dateFrom) " +
-//           "AND (:dateTo IS NULL OR d.createdAt <= :dateTo) " +
-//           "AND d.status = 'Verified' " +
-//           "GROUP BY d.paymentMode " +
-//           "ORDER BY SUM(d.amount) DESC")
-//    List<Object[]> findDonationSumByPaymentMode(@Param("cultivatorId") Integer cultivatorId,
-//                                                @Param("dateFrom") Date dateFrom,
-//                                                @Param("dateTo") Date dateTo);
-//
-//    @Query("SELECT dc.name, SUM(d.amount) FROM StoredDonation d " +
-//           "JOIN d.collectedBy dc " +
-//           "WHERE (:dateFrom IS NULL OR d.createdAt >= :dateFrom) " +
-//           "AND (:dateTo IS NULL OR d.createdAt <= :dateTo) " +
-//           "AND d.status = 'Verified' " +
-//           "GROUP BY dc.id, dc.name " +
-//           "ORDER BY SUM(d.amount) DESC")
-//    List<Object[]> findDonationSumByCultivator(@Param("dateFrom") Date dateFrom,
-//                                               @Param("dateTo") Date dateTo);
-
     @Query("SELECT d.paymentMode, SUM(d.amount) FROM StoredDonation d " +
             "WHERE (:collectedById IS NULL OR d.collectedBy.id = :collectedById) " +
             "  AND (:dateFrom IS NULL OR d.paymentDate >= :dateFrom) " +

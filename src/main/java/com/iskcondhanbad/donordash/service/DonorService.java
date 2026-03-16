@@ -33,7 +33,7 @@ public class DonorService {
                 .findById(createDonorRequest.getDonorCultivatorId())
                 .orElseThrow(() -> new RuntimeException("Donor cultivator not found"));
 
-        StoredDonor donor = new StoredDonor();
+        final StoredDonor donor = new StoredDonor();
 
         donor.setName(createDonorRequest.getName());
         donor.setCategory("Not Specified");
@@ -49,7 +49,7 @@ public class DonorService {
         donor.setPanNumber(createDonorRequest.getPanNumber());
         donor.setRemark(createDonorRequest.getRemark());
         donor.setDonorCultivator(cultivator);
-        donor.setUsername(generateUsername(createDonorRequest.getName(),createDonorRequest.getMobileNumber()));
+        donor.setUsername(generateUsername(createDonorRequest));
         donorRepository.save(donor);
     }
 
@@ -93,17 +93,17 @@ public class DonorService {
     }
 
 
-//    public String generateUsername(CreateDonorRequest createDonorRequest, Integer id) {
-//        String namePart = createDonorRequest.getName().length() > 15
-//                ? createDonorRequest.getName().substring(0, 15)
-//                : createDonorRequest.getName();
-//
-//        String addressPart = createDonorRequest.getAddress().length() > 15
-//                ? createDonorRequest.getAddress().substring(0, 15)
-//                : createDonorRequest.getAddress();
-//
-//        return id + "," + namePart + "," + addressPart;
-//    }
+    public String generateUsername(CreateDonorRequest createDonorRequest) {
+        String namePart = createDonorRequest.getName().length() > 20
+                ? createDonorRequest.getName().substring(0, 20)
+                : createDonorRequest.getName();
+
+        String addressPart = createDonorRequest.getAddress().length() > 20
+                ? createDonorRequest.getAddress().substring(0, 20)
+                : createDonorRequest.getAddress();
+
+        return namePart + "-" + addressPart;
+    }
 
     public List<DonorDetailsDto> getDonorsByCultivators(List<String> cultivatorNames) {
         List<StoredDonor> donors = donorRepository
@@ -173,15 +173,6 @@ public class DonorService {
                 .username(storedDonor.getUsername())
                 .supervisorName(null)
                 .build();
-    }
-
-    public String generateUsername(String name, String mobileNumber) {
-        if (name == null || name.isBlank() || mobileNumber == null || mobileNumber.isBlank()) {
-            throw new IllegalArgumentException("Name and mobile number must not be empty");
-        }
-
-        String firstWord = name.trim().split("\\s+")[0].toLowerCase();
-        return firstWord + "-" + mobileNumber.trim();
     }
 
     private boolean isBlank(String s) {
