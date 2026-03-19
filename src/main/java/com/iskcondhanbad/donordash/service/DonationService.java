@@ -164,8 +164,8 @@ public class DonationService {
     @Transactional
     public StoredDonation changeStatus(Long donationId, String newStatus) throws Exception {
         StoredDonation donation = findDonationById(donationId);
-
         String currentStatus = donation.getStatus();
+        validateStatusChange(currentStatus, newStatus);
 
         if ("Verified".equalsIgnoreCase(newStatus) && Objects.isNull(donation.getTransactionId())
                 && !"Cash".equalsIgnoreCase(donation.getPaymentMode())) {
@@ -173,7 +173,7 @@ public class DonationService {
         }
 
         donation.setStatus(newStatus);
-        if(!currentStatus.equalsIgnoreCase("Cancelled") && newStatus.equalsIgnoreCase("Cancelled")) {
+        if(newStatus.equalsIgnoreCase("Cancelled")) {
             String txnId = donation.getTransactionId();
             if (isBlank(txnId)) {
                 txnId = "TXN-" + donation.getId().toString();
@@ -435,6 +435,23 @@ public class DonationService {
 
     private Date validOrDefault(Date date, Date defaultDate) {
         return Objects.nonNull(date) ? date : defaultDate;
+    }
+
+    private void validateStatusChange(String currentStatus, String newStatus) throws Exception {
+        if (Objects.isNull(currentStatus) || Objects.isNull(newStatus)) {
+            throw new Exception("Status cannot be null");
+        }
+
+        String current = currentStatus.toLowerCase();
+        String next = newStatus.toLowerCase();
+
+        boolean isValid = (current.equals("unapproved") && next.equals("pending")) ||
+                (current.equals("pending") && next.equals("cancelled")) ||
+                (current.equals("pending") && next.equals("verified"));
+
+        if (!isValid) {
+            throw new Exception("Invalid status change from " + currentStatus + " to " + newStatus);
+        }
     }
 
     private StoredDonorCultivator getDonorCultivatorByDonor(StoredDonor donor) {
