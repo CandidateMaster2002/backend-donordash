@@ -424,7 +424,8 @@ public class DonationService {
         receipt.setPaymentMode(donation.getPaymentMode());
         receipt.setTransactionID(donation.getTransactionId());
         receipt.setReceiptNumber(donation.getReceiptId());
-
+        receipt.setState(donor.getState());
+        receipt.setCity(donor.getCity());
         return receipt;
     }
 

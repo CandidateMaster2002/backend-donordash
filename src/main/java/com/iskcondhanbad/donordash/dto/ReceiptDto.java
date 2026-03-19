@@ -22,4 +22,6 @@ public class ReceiptDto {
     private String donorCultivatorName;
     private String donorCultivatorId;
     private String donationId;
+    private String city;
+    private String state;
 }
