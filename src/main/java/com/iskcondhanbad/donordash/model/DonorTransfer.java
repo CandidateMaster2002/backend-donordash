@@ -3,7 +3,9 @@ package com.iskcondhanbad.donordash.model;
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.ToString;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import java.util.List;
 
@@ -19,18 +21,19 @@ public class DonorTransfer {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "donor_id", nullable = false)
     private StoredDonor donor;
 
-    // Cultivator who requested the transfer
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "requested_by", nullable = false)
+    @ToString.Exclude
     private StoredDonorCultivator requestedBy;
 
     // Cultivator who is being requested to give/take
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "requested_to", nullable = false)
+    @ToString.Exclude
     private StoredDonorCultivator requestedTo;
 
     // ACQUIRE or RELEASE

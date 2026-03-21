@@ -2,6 +2,7 @@ package com.iskcondhanbad.donordash.model;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Data;
+import lombok.ToString;
 
 
 @Data
@@ -41,6 +42,7 @@ public class StoredDonorCultivator {
     @JsonIgnore
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "donation_supervisor_id", nullable = false)
+    @ToString.Exclude
     private DonationSupervisor donationSupervisor;
 
     // Getters and setters

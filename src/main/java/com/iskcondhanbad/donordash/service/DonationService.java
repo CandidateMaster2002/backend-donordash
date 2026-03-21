@@ -447,7 +447,8 @@ public class DonationService {
 
         boolean isValid = (current.equals("unapproved") && next.equals("pending")) ||
                 (current.equals("pending") && next.equals("cancelled")) ||
-                (current.equals("pending") && next.equals("verified"));
+                (current.equals("pending") && next.equals("verified")) ||
+                (current.equals("verified") && next.equals("cancelled"));//will be removed in future as we should not allow cancelling verified donations, but added for backward compatibility with existing data
 
         if (!isValid) {
             throw new Exception("Invalid status change from " + currentStatus + " to " + newStatus);
