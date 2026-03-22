@@ -165,6 +165,9 @@ public class DonationService {
     public StoredDonation changeStatus(Long donationId, String newStatus) throws Exception {
         StoredDonation donation = findDonationById(donationId);
         String currentStatus = donation.getStatus();
+        if(currentStatus.equalsIgnoreCase(newStatus)) {
+            return donation;
+        }
         validateStatusChange(currentStatus, newStatus);
 
         if ("Verified".equalsIgnoreCase(newStatus) && Objects.isNull(donation.getTransactionId())

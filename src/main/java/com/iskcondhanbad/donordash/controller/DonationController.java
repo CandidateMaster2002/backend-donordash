@@ -68,8 +68,7 @@ public class DonationController {
                                           @RequestBody UpdateDonationRequest request) {
         try {
             request.setDonationId(donationId);
-            StoredDonation donation = donationService.updateDonation(request);
-            return ResponseEntity.ok(donation);
+            return ResponseEntity.ok(donationService.bulkEditDonations(List.of(request)));
         } catch (Exception ex) {
             return ResponseEntity
                     .badRequest()
