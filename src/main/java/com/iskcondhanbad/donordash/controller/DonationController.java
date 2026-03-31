@@ -31,9 +31,14 @@ public class DonationController {
       public ResponseEntity<?> donate(@RequestBody CreateDonationRequest createDonationRequest) {
         try {
             AddDonationResponseDto addDonationResponseDto = donationService.donate(createDonationRequest);
-            return ResponseEntity.ok(addDonationResponseDto);
+            return ResponseEntity.ok(new ApiResponseDto<>(true, "Donation added successfully", addDonationResponseDto));
+        } catch (IllegalArgumentException e) {
+            log.error("Validation error in donate: {}", e.getMessage());
+            return ResponseEntity.badRequest().body(new ApiResponseDto<>(false, e.getMessage()));
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
+            log.error("Error in donate endpoint: ", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new ApiResponseDto<>(false, "Failed to add donation: " + e.getMessage()));
         }
       }
 

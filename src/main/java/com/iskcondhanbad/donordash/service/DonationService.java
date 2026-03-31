@@ -17,6 +17,7 @@ import jakarta.persistence.criteria.Join;
 import jakarta.persistence.criteria.JoinType;
 import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
+import lombok.NonNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -43,9 +44,15 @@ public class DonationService {
 
     @Transactional
     public AddDonationResponseDto donate(CreateDonationRequest createDonationRequest) {
-        // validate donor
         StoredDonor donor = donorRepository.findById(createDonationRequest.getDonorId())
                 .orElseThrow(() -> new RuntimeException("Donor not found"));
+
+        Date donationDate = (Objects.nonNull(createDonationRequest.getPaymentDate()))
+                ? createDonationRequest.getPaymentDate() 
+                : (Objects.nonNull(createDonationRequest.getCreatedAt()) 
+                    ? createDonationRequest.getCreatedAt() 
+                    : new Date());
+        validateFinancialYear(donationDate);
 
         final String paymentMode = createDonationRequest.getPaymentMode();
         final String transactionId = createDonationRequest.getTransactionId();
@@ -467,5 +474,19 @@ public class DonationService {
 
     private StoredDonorCultivator getDonorCultivatorById(Integer donorCultivatorId) {
         return donorCultivatorRepository.findById(donorCultivatorId).orElse(null);
+    }
+
+    private void validateFinancialYear(@NonNull final Date donationDate) {
+        Date fyStart = Constants.getCurrentFinancialYearStart();
+        Date fyEnd = Constants.getCurrentFinancialYearEnd();
+        
+        if (donationDate.before(fyStart) || donationDate.after(fyEnd)) {
+            String message = String.format(
+                    "Donations can only be added for the current financial year (April 1st - March 31st). Current FY: %1$tB %1$td, %1$tY to %2$tB %2$td, %2$tY",
+                    fyStart,
+                    fyEnd
+            );
+            throw new IllegalArgumentException(message);
+        }
     }
 }
