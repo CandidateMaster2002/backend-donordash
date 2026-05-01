@@ -23,6 +23,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Service
@@ -96,6 +97,7 @@ public class DonationService {
         donation.setVerifiedAt(createDonationRequest.getVerifiedAt());
         donation.setNotGenerateReceipt(Boolean.TRUE.equals(createDonationRequest.getNotGenerateReceipt()));
         donation.setPaymentDate(paymentDate);
+        donation.setCostCenter(createDonationRequest.getCostCenter());
 
         StoredDonation saved = donationRepository.save(donation);
         return new AddDonationResponseDto(false, saved);
@@ -269,30 +271,34 @@ public class DonationService {
     }
 
     @Transactional(readOnly = true)
-    public List<Donation> getDonationsByFilter(DonationFilterDto filter) {
+    public <T> List<T> getDonationsByFilter(DonationFilterDto filter,
+                                            Function<Donation, T> transformer) {
         Date fromDate = validOrDefault(filter.getFromDate(), Constants.DEFAULT_FROM_DATE);
         Date toDate   = validOrDefault(filter.getToDate(), new Date());
-        if(fromDate.after(toDate)){
+
+        if (fromDate.after(toDate)) {
             Date temp = fromDate;
             fromDate = toDate;
             toDate = temp;
         }
 
         return donationRepository.findDonationsByFilter(
-                fromDate,
-                toDate,
-                filter.getDonorCultivatorId(),
-                filter.getDonationSupervisorId(),
-                isBlank(filter.getStatus()) ? null : filter.getStatus(),
-                filter.getCollectedById(),
-                isBlank(filter.getPaymentMode()) ? null : filter.getPaymentMode(),
-                filter.getDonorId(),
-                (Objects.isNull(filter.getDonorIds()) || filter.getDonorIds().isEmpty())
-                        ? null
-                        : filter.getDonorIds(),
-                filter.getMinAmount() > 0 ? filter.getMinAmount() : null,
-                filter.getMaxAmount() > 0 ? filter.getMaxAmount() : null
-        );
+                        fromDate,
+                        toDate,
+                        filter.getDonorCultivatorId(),
+                        filter.getDonationSupervisorId(),
+                        isBlank(filter.getStatus()) ? null : filter.getStatus(),
+                        filter.getCollectedById(),
+                        isBlank(filter.getPaymentMode()) ? null : filter.getPaymentMode(),
+                        filter.getDonorId(),
+                        (Objects.isNull(filter.getDonorIds()) || filter.getDonorIds().isEmpty())
+                                ? null
+                                : filter.getDonorIds(),
+                        filter.getMinAmount() > 0 ? filter.getMinAmount() : null,
+                        filter.getMaxAmount() > 0 ? filter.getMaxAmount() : null
+                ).stream()
+                .map(transformer)
+                .toList();
     }
 
 

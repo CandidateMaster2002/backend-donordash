@@ -27,4 +27,14 @@ DonorCultivatorService donorCultivatorService;
         }
     }
 
+    @GetMapping("/{donorCultivatorId}")
+    public ResponseEntity<?> getDonorCultivatorById(@PathVariable Integer donorCultivatorId) {
+        try {
+            return ResponseEntity.ok(donorCultivatorService.getDonorCultivatorById(donorCultivatorId));
+        } catch (Exception ex) {
+            return ResponseEntity
+                    .badRequest()
+                    .body(new ApiResponse(false, ex.getMessage()));
+        }
+    }
 }

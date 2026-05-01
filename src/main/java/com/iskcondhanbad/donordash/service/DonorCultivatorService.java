@@ -25,6 +25,11 @@ public class DonorCultivatorService {
         return donorCultivators;
     }
 
+    @Transactional(readOnly = true)
+    public StoredDonorCultivator getDonorCultivatorById(Integer id) {
+        return donorCultivatorRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Donor Cultivator not found with ID: " + id));
+    }
 
     public StoredDonorCultivator changeDonationsVerified(Integer donorCultivatorId,Integer newCount) throws Exception {
         StoredDonorCultivator donorCultivator = donorCultivatorRepository.findById(donorCultivatorId)
@@ -33,5 +38,4 @@ public class DonorCultivatorService {
         donorCultivatorRepository.save(donorCultivator);
         return donorCultivator;
     }
-
 }

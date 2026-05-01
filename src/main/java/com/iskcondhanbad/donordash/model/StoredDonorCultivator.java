@@ -45,5 +45,6 @@ public class StoredDonorCultivator {
     @ToString.Exclude
     private DonationSupervisor donationSupervisor;
 
-    // Getters and setters
+    @Column(nullable = false)
+    private String razorpayTag;
 }

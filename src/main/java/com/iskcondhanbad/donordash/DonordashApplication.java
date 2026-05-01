@@ -8,14 +8,10 @@ import io.github.cdimascio.dotenv.Dotenv;
 
 
 @CrossOrigin
-@SpringBootApplication(exclude = { SecurityAutoConfiguration.class })
+@SpringBootApplication(exclude = {SecurityAutoConfiguration.class})
 public class DonordashApplication {
 
     public static void main(String[] args) {
-        // Load system environment variables directly
-        System.out.println("DATABASE_URL: " + System.getenv("DATABASE_URL"));
-        System.out.println("RAZORPAY_KEY_ID: " + System.getenv("RAZORPAY_KEY_ID"));
-
         // Set system properties if needed elsewhere in the app
         System.setProperty("DATABASE_URL", System.getenv("DATABASE_URL"));
         System.setProperty("DATABASE_USERNAME", System.getenv("DATABASE_USERNAME"));

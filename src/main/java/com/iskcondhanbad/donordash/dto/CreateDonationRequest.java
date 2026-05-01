@@ -19,4 +19,6 @@ public class CreateDonationRequest {
     private Date verifiedAt;
     private Integer collectedById;
     private Boolean notGenerateReceipt;
+    private Boolean isUnclaimedRazorpayDonation;
+    private String costCenter;
 }

@@ -1,10 +1,13 @@
 package com.iskcondhanbad.donordash.dto;
 
-import lombok.Data;
+import lombok.*;
 
 import java.util.Date;
 import java.util.List;
 
+@AllArgsConstructor
+@NoArgsConstructor
+@Builder
 @Data
 public class DonationFilterDto {
     private Integer donationSupervisorId;

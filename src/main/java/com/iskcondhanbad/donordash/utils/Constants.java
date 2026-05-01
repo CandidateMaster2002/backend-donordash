@@ -20,6 +20,19 @@ public class Constants {
     public static final String PAYMENT_MODE = "payment_mode";
     public static final String CULTIVATOR = "cultivator";
 
+    public static final String QR_V2_PAYMENT = "QRv2 Payment";
+    public static final String CAPTURED = "captured";
+    public static final String DESCRIPTION = "description";
+    public static final String CAPTURED_AT = "captured_at";
+    public static final String ACQUIRER_DATA = "acquirer_data";
+    public static final String AMOUNT = "amount";
+    public static final String NOTES = "notes";
+    public static final String ID = "id";
+
+    public static final String BANK_TRANSFER = "Bank Transfer";
+    public static final String RAZORPAY_LINK = "Razorpay Link";
+    public static final int DUPLICATE_CHECK_DAYS = 30;
+
     public static Date getCurrentFinancialYearStart() {
         LocalDate today = LocalDate.now();
         int year = today.getYear();
