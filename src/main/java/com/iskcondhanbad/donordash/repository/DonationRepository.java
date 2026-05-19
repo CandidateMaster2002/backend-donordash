@@ -77,6 +77,8 @@ public interface DonationRepository extends JpaRepository<StoredDonation, Long> 
 
     List<StoredDonation> findByDonorId(Integer donorId);
 
+    List<StoredDonation> findByDonorIdAndPaymentDateBetween(Integer donorId, Date paymentDateStart, Date paymentDateEnd);
+
     @Query("SELECT d.paymentMode, SUM(d.amount) FROM StoredDonation d " +
             "WHERE (:collectedById IS NULL OR d.collectedBy.id = :collectedById) " +
             "  AND (:dateFrom IS NULL OR d.paymentDate >= :dateFrom) " +

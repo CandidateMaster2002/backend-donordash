@@ -53,7 +53,7 @@ public class DonationService {
                 : (Objects.nonNull(createDonationRequest.getCreatedAt()) 
                     ? createDonationRequest.getCreatedAt() 
                     : new Date());
-        validateFinancialYear(donationDate);
+        validateDonation(donationDate, donor, createDonationRequest);
 
         final String paymentMode = createDonationRequest.getPaymentMode();
         final String transactionId = createDonationRequest.getTransactionId();
@@ -482,10 +482,13 @@ public class DonationService {
         return donorCultivatorRepository.findById(donorCultivatorId).orElse(null);
     }
 
-    private void validateFinancialYear(@NonNull final Date donationDate) {
+    private void validateDonation(@NonNull final Date donationDate,
+                                  @NonNull final StoredDonor storedDonor,
+                                  @NonNull final CreateDonationRequest createDonationRequest) {
         Date fyStart = Constants.getCurrentFinancialYearStart();
         Date fyEnd = Constants.getCurrentFinancialYearEnd();
         
+        // Validation 1: Check if donation is within current financial year
         if (donationDate.before(fyStart) || donationDate.after(fyEnd)) {
             String message = String.format(
                     "Donations can only be added for the current financial year (April 1st - March 31st). Current FY: %1$tB %1$td, %1$tY to %2$tB %2$td, %2$tY",
@@ -493,6 +496,40 @@ public class DonationService {
                     fyEnd
             );
             throw new IllegalArgumentException(message);
+        }
+
+        // Validation 2: Cash donation > 49,999 requires PAN when receipt is to be generated
+        if (Constants.CASH.equalsIgnoreCase(createDonationRequest.getPaymentMode())) {
+            double amount = Objects.nonNull(createDonationRequest.getAmount()) ? createDonationRequest.getAmount() : 0.0;
+            boolean notGenerateReceipt = Boolean.TRUE.equals(createDonationRequest.getNotGenerateReceipt());
+            
+            if (amount > Constants.CASH_DONATION_PAN_THRESHOLD && !notGenerateReceipt) {
+                if (isBlank(storedDonor.getPanNumber())) {
+                    throw new IllegalArgumentException(
+                            "Cash donations more than Rs 49,999 should have a valid PAN number or else select Shyam Cash in that case no receipt will be generated."
+                    );
+                }
+            }
+        }
+
+        // Validation 3: Cumulative donations > 1,00,000 in FY requires PAN
+        double currentDonationAmount = Objects.nonNull(createDonationRequest.getAmount()) ? createDonationRequest.getAmount() : 0.0;
+        List<StoredDonation> existingDonations = donationRepository.findByDonorIdAndPaymentDateBetween(
+                storedDonor.getId(),
+                fyStart,
+                fyEnd
+        );
+        
+        double totalDonations = currentDonationAmount + existingDonations.stream()
+                .mapToDouble(StoredDonation::getAmount)
+                .sum();
+        
+        if (totalDonations > Constants.CUMULATIVE_DONATION_PAN_THRESHOLD) {
+            if (isBlank(storedDonor.getPanNumber())) {
+                throw new IllegalArgumentException(
+                        "As per Income Tax regulations, this donor's cumulative donations in the current financial year have exceeded ₹1,00,000. Please update the donor's profile with a valid PAN number before adding further donations"
+                );
+            }
         }
     }
 }

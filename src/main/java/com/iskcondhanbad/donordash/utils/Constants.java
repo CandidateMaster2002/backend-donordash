@@ -31,7 +31,12 @@ public class Constants {
 
     public static final String BANK_TRANSFER = "Bank Transfer";
     public static final String RAZORPAY_LINK = "Razorpay Link";
+    public static final String CASH = "Cash";
+    public static final String SHYAM_CASH = "Shyam Cash";
     public static final int DUPLICATE_CHECK_DAYS = 30;
+
+    public static final double CASH_DONATION_PAN_THRESHOLD = 49_999.0;
+    public static final double CUMULATIVE_DONATION_PAN_THRESHOLD = 100_000.0;
 
     public static Date getCurrentFinancialYearStart() {
         LocalDate today = LocalDate.now();
