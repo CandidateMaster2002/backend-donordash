@@ -366,6 +366,13 @@ public class DonationService {
         }
         return donationSummary;
     }
+
+    public Optional<StoredDonation> getDonationByTransactionId(String transactionId) {
+        if (isBlank(transactionId)) {
+            return Optional.empty();
+        }
+        return donationRepository.findByTransactionId(transactionId);
+    }
     
     private static Double convertToDouble(Object number) {
         if (Objects.isNull(number)) return 0.0;

@@ -12,11 +12,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.Calendar;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.function.Function;
 
 @Slf4j
@@ -170,38 +166,53 @@ public class DonationController {
     }
 
     /**
-     * Validates that no duplicate donation exists in Razorpay for the given transaction ID
-     * within a 30-day window around the payment date.
+     * Validates that no duplicate donation exists in both Razorpay and the database
+     * for the given transaction ID within a 30-day window around the payment date.
+     *
+     * A donation is considered a duplicate only if it exists in both:
+     * 1. Razorpay payments (as RRN or transaction ID)
+     * 2. Database (already stored as a donation)
      *
      * @param createDonationRequest The donation request to validate
-     * @throws IllegalArgumentException If a duplicate donation is found
+     * @throws IllegalArgumentException If a duplicate donation is found in both places
      */
     private void validateNoDuplicateDonation(CreateDonationRequest createDonationRequest) throws Exception {
         Date paymentDate = createDonationRequest.getPaymentDate();
         String transactionId = createDonationRequest.getTransactionId();
 
-        if (paymentDate == null || transactionId == null || transactionId.isEmpty()) {
+        if (Objects.isNull(paymentDate) || Objects.isNull(transactionId) || transactionId.isEmpty()) {
             return;
         }
 
-        Date fromDate = subtractDays(paymentDate, Constants.DUPLICATE_CHECK_DAYS);
-        Date toDate = addDays(paymentDate, Constants.DUPLICATE_CHECK_DAYS);
-        long fromTimestamp = fromDate.getTime() / 1000L;
-        long toTimestamp = toDate.getTime() / 1000L;
+        final Date fromDate = subtractDays(paymentDate, Constants.DUPLICATE_CHECK_DAYS);
+        final Date toDate = addDays(paymentDate, Constants.DUPLICATE_CHECK_DAYS);
+        final long fromTimestamp = fromDate.getTime() / 1000L;
+        final long toTimestamp = toDate.getTime() / 1000L;
 
-        Map<String, Object> filters = new HashMap<>();
+        final Map<String, Object> filters = new HashMap<>();
         filters.put(Constants.CAPTURED, true);
 
+        // Step 1: Check if duplicate exists in Razorpay
         List<RazorpayDonation> razorpayDonations = razorpayService.fetchDonations(fromTimestamp, toTimestamp, filters);
 
-        boolean duplicateFound = razorpayDonations.stream()
-                .anyMatch(donation -> transactionId.equals(donation.getRrn()) ||
-                        transactionId.equals(donation.getTransactionId()));
+        final RazorpayDonation duplicateInRazorpay = razorpayDonations.stream()
+                .filter(donation -> transactionId.equals(donation.getRrn()) ||
+                        transactionId.equals(donation.getTransactionId()))
+                .findFirst()
+                .orElse(null);
 
-        if (duplicateFound) {
-            throw new IllegalArgumentException(
-                    "A donation with transaction ID '" + transactionId + "' already exists in the database"
-            );
+        // Step 2: If found in Razorpay, verify it also exists in database
+        if (Objects.nonNull(duplicateInRazorpay)) {
+            final boolean duplicateInDatabase = donationService.getDonationByTransactionId(duplicateInRazorpay.getTransactionId()).isPresent() ||
+                    donationService.getDonationByTransactionId(duplicateInRazorpay.getRrn()).isPresent();
+            
+            // Only throw error if it exists in BOTH Razorpay and database
+            if (duplicateInDatabase) {
+                throw new IllegalArgumentException(
+                        "A donation with transaction ID '" + transactionId + "' already exists in the database. " +
+                        "This is a duplicate donation."
+                );
+            }
         }
     }
 
