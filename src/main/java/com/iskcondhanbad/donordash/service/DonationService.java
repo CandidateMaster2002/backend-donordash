@@ -105,14 +105,14 @@ public class DonationService {
 
     @Transactional(readOnly = true)
     public List<DonationDetailsDTO> getFilteredDonations(Date startDate, Date endDate, List<String> paymentModes,
-            List<String> donationStatuses, List<String> cultivatorNames) {
+            List<String> donationStatuses, List<String> collectedByNames) {
 
         CriteriaBuilder cb = entityManager.getCriteriaBuilder();
         CriteriaQuery<StoredDonation> query = cb.createQuery(StoredDonation.class);
         Root<StoredDonation> donationRoot = query.from(StoredDonation.class);
 
-        Join<StoredDonation, StoredDonor> donorJoin = donationRoot.join("donor", JoinType.INNER);
-        Join<StoredDonor, StoredDonorCultivator> cultivatorJoin = donorJoin.join("donorCultivator", JoinType.INNER);
+        // collectedBy is a relation on StoredDonation (who collected the donation)
+        Join<StoredDonation, StoredDonorCultivator> collectedByJoin = donationRoot.join("collectedBy", JoinType.LEFT);
 
         List<Predicate> predicates = new ArrayList<>();
 
@@ -129,8 +129,8 @@ public class DonationService {
         if (Objects.nonNull(paymentModes) && !paymentModes.isEmpty()) {
             predicates.add(donationRoot.get("paymentMode").in(paymentModes));
         }
-        if (Objects.nonNull(cultivatorNames) && !cultivatorNames.isEmpty()) {
-            predicates.add(cultivatorJoin.get("name").in(cultivatorNames));
+        if (Objects.nonNull(collectedByNames) && !collectedByNames.isEmpty()) {
+            predicates.add(collectedByJoin.get("name").in(collectedByNames));
         }
 
         query.select(donationRoot)
@@ -139,7 +139,10 @@ public class DonationService {
 
         List<StoredDonation> donations = entityManager.createQuery(query).getResultList();
 
-        return donations.stream().map(this::mapToDTO).collect(Collectors.toList());
+        // Map entity -> DTO (kept simple and efficient)
+        return donations.stream()
+                .map(this::mapToDTO)
+                .collect(Collectors.toList());
     }
 
     private DonationDetailsDTO mapToDTO(StoredDonation donation) {
@@ -156,6 +159,8 @@ public class DonationService {
         dto.setCreatedAt(donation.getCreatedAt());
         dto.setVerifiedAt(donation.getVerifiedAt());
         dto.setReceiptNumber(donation.getReceiptId());
+        dto.setNotGenerateReceipt(donation.getNotGenerateReceipt());
+        dto.setCostCenter(donation.getCostCenter());
         dto.setStatus(donation.getStatus());
         dto.setDonationId(donation.getId());
         dto.setDonorName(donor.getName());

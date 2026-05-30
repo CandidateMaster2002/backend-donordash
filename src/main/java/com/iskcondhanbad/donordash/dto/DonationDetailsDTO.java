@@ -25,4 +25,6 @@ public class DonationDetailsDTO {
     private Date createdAt;
     private Date verifiedAt;
     private String receiptNumber;
+    private Boolean notGenerateReceipt;
+    private String costCenter;
 }

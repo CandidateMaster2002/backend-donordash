@@ -107,10 +107,10 @@ public class DonationController {
                                                  @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd") Date endDate,
                                                  @RequestParam(required = false) List<String> paymentModes,
                                                  @RequestParam(required = false) List<String> statuses,
-                                                 @RequestParam(required = false) List<String> cultivatorNames) {
+                                                 @RequestParam(required = false) List<String> collectedByNames) {
         try {
             List<DonationDetailsDTO> donations = donationService.getFilteredDonations(startDate, endDate, paymentModes,
-                    statuses, cultivatorNames);
+                    statuses, collectedByNames);
             return ResponseEntity.ok(donations);
         } catch (IllegalArgumentException ex) {
             log.error("Validation error in getFilteredDonations: {}", ex.getMessage());
