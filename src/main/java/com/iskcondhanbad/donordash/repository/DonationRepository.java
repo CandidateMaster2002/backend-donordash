@@ -125,4 +125,9 @@ public interface DonationRepository extends JpaRepository<StoredDonation, Long> 
                                             @Param("dateFrom") Date dateFrom,
                                             @Param("dateTo") Date dateTo,
                                             @Param("status") String status);
+
+//    @Query("SELECT d.donor.id, SUM(d.amount) FROM StoredDonation d " +
+//            "WHERE d.status = 'Verified' " +
+//            "GROUP BY d.donor.id")
+//    List<Object[]> findTotalVerifiedDonationAmountPerDonor();
 }

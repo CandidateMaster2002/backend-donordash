@@ -22,4 +22,6 @@ public class CreateDonorRequest {
     private String remark;
     private List<SpecialDayDto> specialDays;
     private Integer donorCultivatorId;
+    private String type;
+    private Double totalAmountDonated;
 }

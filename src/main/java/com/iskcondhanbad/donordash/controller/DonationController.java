@@ -150,6 +150,19 @@ public class DonationController {
         }
     }
 
+//    // TODO: Remove this endpoint after backfilling totalDonatedAmount for all donors
+//    @PostMapping("/backfill-total-donated")
+//    public ResponseEntity<?> backfillTotalDonatedAmounts() {
+//        try {
+//            donationService.backfillTotalDonatedAmounts();
+//            return ResponseEntity.ok(new ApiResponseDto<>(true, "Successfully backfilled totalDonatedAmount for all donors", null));
+//        } catch (Exception e) {
+//            log.error("Error backfilling totalDonatedAmount: ", e);
+//            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+//                    .body(new ApiResponseDto<>(false, "Failed to backfill: " + e.getMessage()));
+//        }
+//    }
+
     @GetMapping("/dummy")
     public ResponseEntity<?> postDummy() {
         try {

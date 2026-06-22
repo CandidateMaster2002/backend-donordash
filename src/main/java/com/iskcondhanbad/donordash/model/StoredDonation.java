@@ -6,6 +6,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.iskcondhanbad.donordash.utils.Constants;
 import lombok.ToString;
 
 import java.util.Date;
@@ -74,7 +75,7 @@ public class StoredDonation {
     @PrePersist
     protected void onCreate() {
         if (this.status == null) {
-            this.status = "Pending"; // Ensures default value if not set
+            this.status = Constants.PENDING; // Ensures default value if not set
         }
         if (this.createdAt == null) {
             this.createdAt = new Date(); // Automatically sets creation date

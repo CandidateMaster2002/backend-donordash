@@ -57,12 +57,12 @@ public class DonationService {
 
         final String paymentMode = createDonationRequest.getPaymentMode();
         final String transactionId = createDonationRequest.getTransactionId();
-        if (!"Cash".equalsIgnoreCase(paymentMode) && isBlank(transactionId)) {
+        if (!Constants.CASH.equalsIgnoreCase(paymentMode) && isBlank(transactionId)) {
             throw new IllegalArgumentException("transactionId is required");
         }
 
         // check duplicate by transactionId (only when not cancelled)
-        if (Objects.nonNull(transactionId)&&!"Cancelled".equalsIgnoreCase(createDonationRequest.getStatus())) {
+        if (Objects.nonNull(transactionId)&&!Constants.CANCELLED.equalsIgnoreCase(createDonationRequest.getStatus())) {
             Optional<StoredDonation> existing = donationRepository.findByTransactionId(transactionId);
             if (existing.isPresent()) {
                 return new AddDonationResponseDto(true, existing.get());
@@ -85,7 +85,7 @@ public class DonationService {
 
         donation.setCollectedBy(collectedBy);
         if (!Objects.equals(collectedBy.getId(), donorCultivator.getId())) {
-            donation.setStatus("Unapproved");
+            donation.setStatus(Constants.UNAPPROVED);
         } else {
             donation.setStatus(createDonationRequest.getStatus());
         }
@@ -184,25 +184,35 @@ public class DonationService {
         }
         validateStatusChange(currentStatus, newStatus);
 
-        if ("Verified".equalsIgnoreCase(newStatus) && Objects.isNull(donation.getTransactionId())
-                && !"Cash".equalsIgnoreCase(donation.getPaymentMode())) {
+        if (Constants.VERIFIED.equalsIgnoreCase(newStatus) && Objects.isNull(donation.getTransactionId())
+                && !Constants.CASH.equalsIgnoreCase(donation.getPaymentMode())) {
             throw new Exception("Cannot verify non-cash donation without a transaction ID");
         }
 
         donation.setStatus(newStatus);
-        if(newStatus.equalsIgnoreCase("Cancelled")) {
+        if(newStatus.equalsIgnoreCase(Constants.CANCELLED)) {
+            // If going from Verified -> Cancelled, subtract from totalDonatedAmount
+            if (Constants.VERIFIED.equalsIgnoreCase(currentStatus)) {
+                StoredDonor donor = donation.getDonor();
+                double currentTotal = donor.getTotalDonatedAmount() != null ? donor.getTotalDonatedAmount() : 0.0;
+                donor.setTotalDonatedAmount(currentTotal - donation.getAmount());
+                updateDonorCategory(donor);
+            }
             String txnId = donation.getTransactionId();
             if (isBlank(txnId)) {
                 txnId = "TXN-" + donation.getId().toString();
             }
             donation.setTransactionId(txnId + "-CANCELLED");
         }
-        if ("Verified".equalsIgnoreCase(newStatus)) {
+        if (Constants.VERIFIED.equalsIgnoreCase(newStatus)) {
+            // Add donation amount to donor's totalDonatedAmount
+            StoredDonor donor = donation.getDonor();
+            double currentTotal = donor.getTotalDonatedAmount() != null ? donor.getTotalDonatedAmount() : 0.0;
+            donor.setTotalDonatedAmount(currentTotal + donation.getAmount());
+            updateDonorCategory(donor);
+
             donation.setVerifiedAt(new Date());
-            // Only generate receipt id if donor's category is not "no_receipt"
-            if (Objects.nonNull(donation.getDonor()) && Objects.nonNull(donation.getDonor().getCategory())
-                    && !"no_receipt".equalsIgnoreCase(donation.getDonor().getCategory())
-                    && donation.getNotGenerateReceipt() != Boolean.TRUE) {
+            if (donation.getNotGenerateReceipt() != Boolean.TRUE) {
                 donation.setReceiptId(generateReceiptId(donationId));
             }
         }
@@ -269,7 +279,7 @@ public class DonationService {
         }
 
         if (Objects.nonNull(donation.getPaymentMode()) &&
-                donation.getPaymentMode().equalsIgnoreCase("Cash")) {
+                donation.getPaymentMode().equalsIgnoreCase(Constants.CASH)) {
             donation.setTransactionId(null);
         }
         return donation;
@@ -378,6 +388,35 @@ public class DonationService {
         }
         return donationRepository.findByTransactionId(transactionId);
     }
+
+//    public void backfillTotalDonatedAmounts() {
+//        // Fetch aggregated verified donation totals per donor in a single query
+//        List<Object[]> results = donationRepository.findTotalVerifiedDonationAmountPerDonor();
+//        Map<Integer, Double> donorTotalMap = new HashMap<>();
+//        for (Object[] row : results) {
+//            Integer donorId = (Integer) row[0];
+//            Double total = convertToDouble(row[1]);
+//            donorTotalMap.put(donorId, total);
+//        }
+//
+//        // Update all donors in batches of 100
+//        List<StoredDonor> allDonors = donorRepository.findAll();
+//        List<StoredDonor> batch = new ArrayList<>();
+//        int batchSize = 100;
+//
+//        for (int i = 0; i < allDonors.size(); i++) {
+//            StoredDonor donor = allDonors.get(i);
+//            Double total = donorTotalMap.getOrDefault(donor.getId(), 0.0);
+//            donor.setTotalDonatedAmount(total);
+//            updateDonorCategory(donor);
+//            batch.add(donor);
+//
+//            if (batch.size() == batchSize || i == allDonors.size() - 1) {
+//                donorRepository.saveAll(batch);
+//                batch.clear();
+//            }
+//        }
+//    }
     
     private static Double convertToDouble(Object number) {
         if (Objects.isNull(number)) return 0.0;
@@ -388,6 +427,21 @@ public class DonationService {
             return Double.parseDouble(number.toString());
         } catch (NumberFormatException ex) {
             return 0.0;
+        }
+    }
+
+    private void updateDonorCategory(StoredDonor donor) {
+        double total = donor.getTotalDonatedAmount() != null ? donor.getTotalDonatedAmount() : 0.0;
+        if (total >= 100000) {
+            donor.setCategory(Constants.VERY_BIG_DONOR);
+        } else if (total >= 30000) {
+            donor.setCategory(Constants.MEDIUM_DONOR);
+        } else if (total >= 11000) {
+            donor.setCategory(Constants.SUPPORTER_DONOR);
+        } else if (total >= 5000) {
+            donor.setCategory(Constants.ENTRY_LEVEL_DONOR);
+        } else {
+            donor.setCategory(Constants.GENERAL_DONOR);
         }
     }
 
@@ -428,7 +482,7 @@ public class DonationService {
     public ReceiptDto getReceipt(Long donationId) {
         StoredDonation
                 donation = donationRepository.findById(donationId).orElse(null);
-        if (Objects.isNull(donation) || !donation.getStatus().equals("Verified")) {
+        if (Objects.isNull(donation) || !donation.getStatus().equals(Constants.VERIFIED)) {
             return null;
         }
         StoredDonor donor = donation.getDonor();
@@ -473,10 +527,10 @@ public class DonationService {
         String current = currentStatus.toLowerCase();
         String next = newStatus.toLowerCase();
 
-        boolean isValid = (current.equals("unapproved") && next.equals("pending")) ||
-                (current.equals("pending") && next.equals("cancelled")) ||
-                (current.equals("pending") && next.equals("verified")) ||
-                (current.equals("verified") && next.equals("cancelled"));//will be removed in future as we should not allow cancelling verified donations, but added for backward compatibility with existing data
+        boolean isValid = (current.equals(Constants.UNAPPROVED.toLowerCase()) && next.equals(Constants.PENDING.toLowerCase())) ||
+                (current.equals(Constants.PENDING.toLowerCase()) && next.equals(Constants.CANCELLED.toLowerCase())) ||
+                (current.equals(Constants.PENDING.toLowerCase()) && next.equals(Constants.VERIFIED.toLowerCase())) ||
+                (current.equals(Constants.VERIFIED.toLowerCase()) && next.equals(Constants.CANCELLED.toLowerCase()));//will be removed in future as we should not allow cancelling verified donations, but added for backward compatibility with existing data
 
         if (!isValid) {
             throw new Exception("Invalid status change from " + currentStatus + " to " + newStatus);

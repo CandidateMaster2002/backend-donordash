@@ -33,6 +33,24 @@ public class Constants {
     public static final String RAZORPAY_LINK = "Razorpay Link";
     public static final String CASH = "Cash";
     public static final String SHYAM_CASH = "Shyam Cash";
+
+    // Donation statuses
+    public static final String VERIFIED = "Verified";
+    public static final String CANCELLED = "Cancelled";
+    public static final String PENDING = "Pending";
+    public static final String UNAPPROVED = "Unapproved";
+
+    public static final String NO_RECEIPT = "no_receipt";
+
+    // Donor categories
+    public static final String VERY_BIG_DONOR = "Very Big Donor";
+    public static final String MEDIUM_DONOR = "Medium Donor";
+    public static final String SUPPORTER_DONOR = "Supporter Donor";
+    public static final String ENTRY_LEVEL_DONOR = "Entry-Level Donor";
+    public static final String GENERAL_DONOR = "General Donor";
+    public static final String ONE_TIMER = "One Timer";
+    public static final String NITYA_SEVAK = "Nitya Sevak";
+
     public static final int DUPLICATE_CHECK_DAYS = 30;
 
     public static final double CASH_DONATION_PAN_THRESHOLD = 49_999.0;

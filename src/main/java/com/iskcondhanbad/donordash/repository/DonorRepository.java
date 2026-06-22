@@ -16,7 +16,7 @@ import java.util.Optional;
 @Repository
 public interface DonorRepository extends JpaRepository<StoredDonor, Integer> {
 
-       StoredDonor findByMobileNumber(String mobileNumber);
+    StoredDonor findByMobileNumber(String mobileNumber);
 
 
 
@@ -27,14 +27,14 @@ public interface DonorRepository extends JpaRepository<StoredDonor, Integer> {
 
        @Query("SELECT new com.iskcondhanbad.donordash.dto.DonorDetailsDto(" +
        "d.id, d.name, CONCAT(d.address, ', ', d.city, ', ', d.state, ', ', d.pincode), " +
-       "d.mobileNumber, d.email, d.panNumber, dc.name, d.zone, d.password, d.category, d.type, d.username, d.remark) " +
+       "d.mobileNumber, d.email, d.panNumber, dc.name, d.zone, d.password, d.category, d.type, d.username, d.remark, d.totalDonatedAmount) " +
        "FROM StoredDonor d JOIN d.donorCultivator dc WHERE dc.id = :cultivatorId")
 List<DonorDetailsDto> findAllByDonorCultivatorId(@Param("cultivatorId") Integer cultivatorId);
 
 
 @Query("SELECT new com.iskcondhanbad.donordash.dto.DonorDetailsDto(" +
        "d.id, d.name, CONCAT(d.address, ', ', d.city, ', ', d.state, ', ', d.pincode), " +
-       "d.mobileNumber, d.email, d.panNumber, dc.name, d.zone, d.password, d.category, d.type, d.username, d.remark) " +
+       "d.mobileNumber, d.email, d.panNumber, dc.name, d.zone, d.password, d.category, d.type, d.username, d.remark, d.totalDonatedAmount) " +
        "FROM StoredDonor d JOIN d.donorCultivator dc")
 List<DonorDetailsDto> findAllDonorDetails();
 
@@ -76,7 +76,8 @@ List<DonorDetailsDto> findAllDonorDetails();
                     d.zone,
                     d.remark,
                     d.type,
-                    d.username
+                    d.username,
+                    d.totalDonatedAmount
                 )
                 from StoredDonor d
                 left join d.donorCultivator c
@@ -101,7 +102,8 @@ List<DonorDetailsDto> findAllDonorDetails();
                     d.zone,
                     d.remark,
                     d.type,
-                    d.username
+                    d.username,
+                    d.totalDonatedAmount
                 )
                 from StoredDonor d
                 left join d.donorCultivator c

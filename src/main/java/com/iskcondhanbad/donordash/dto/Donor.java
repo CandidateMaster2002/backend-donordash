@@ -23,10 +23,11 @@ public class Donor {
     private String username;
     private boolean wantPrasadam;
     private String supervisorName;
+    private Double totalDonatedAmount;
 
     public Donor(Integer donorId,String donorName, String category, String mobileNumber, String email,
                  String address, String city, String state, String pincode, String panNumber,
-                 String cultivatorName, String zone, String remark,String type,String username) {
+                 String cultivatorName, String zone, String remark,String type,String username, Double totalDonatedAmount) {
         this.donorId = donorId;
         this.donorName = donorName;
         this.category = category;
@@ -42,11 +43,12 @@ public class Donor {
         this.remark = remark;
         this.type = type;
         this.username = username;
+        this.totalDonatedAmount = totalDonatedAmount;
     }
 
     public Donor(Integer donorId,String donorName, String category, String mobileNumber, String email,
                  String address, String city, String state, String pincode, String panNumber,
-                 String cultivatorName, String zone, String remark,String type,String username,boolean wantPrasadam, String supervisorName) {
+                 String cultivatorName, String zone, String remark,String type,String username,boolean wantPrasadam, String supervisorName, Double totalDonatedAmount) {
         this.donorId = donorId;
         this.donorName = donorName;
         this.wantPrasadam = wantPrasadam;
@@ -64,5 +66,6 @@ public class Donor {
         this.type = type;
         this.username = username;
         this.supervisorName = supervisorName;
+        this.totalDonatedAmount = totalDonatedAmount;
     }
 }

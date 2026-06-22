@@ -5,7 +5,7 @@ import lombok.Data;
 @Data
 public class DonorDetailsDto {
     public DonorDetailsDto(Integer donorId, String name, String fullAddress, String mobileNumber, String email,
-            String panNumber, String connectedTo, String zone, String password,String category, String type, String username,String remark) {
+            String panNumber, String connectedTo, String zone, String password,String category, String type, String username,String remark, Double totalDonatedAmount) {
         this.donorId = donorId;
         this.donorName = name;
         this.fullAddress = fullAddress;
@@ -19,6 +19,7 @@ public class DonorDetailsDto {
         this.type = type;
         this.username = username;
         this.remark = remark;
+        this.totalDonatedAmount = totalDonatedAmount;
     }
 
     private Integer donorId;
@@ -34,4 +35,5 @@ public class DonorDetailsDto {
     private String type; // e.g., "One Timer", "Recurring"
     private String username; // Mobile number or email
     private String remark;
+    private Double totalDonatedAmount;
 }

@@ -6,6 +6,7 @@ import com.iskcondhanbad.donordash.model.StoredDonorCultivator;
 import com.iskcondhanbad.donordash.repository.DonorRepository;
 import com.iskcondhanbad.donordash.repository.DonorCultivatorRepository;
 
+import com.iskcondhanbad.donordash.utils.Constants;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -36,8 +37,8 @@ public class DonorService {
         final StoredDonor donor = new StoredDonor();
 
         donor.setName(createDonorRequest.getName());
-        donor.setCategory("Not Specified");
-        donor.setType("One Timer");
+        donor.setCategory(Constants.GENERAL_DONOR);
+        donor.setType(Constants.ONE_TIMER);
         donor.setEmail(isBlank(createDonorRequest.getEmail()) ? null : createDonorRequest.getEmail());
         donor.setMobileNumber(createDonorRequest.getMobileNumber());
         donor.setPassword(createDonorRequest.getPassword());
@@ -68,8 +69,8 @@ public class DonorService {
             if (donorDto.getPincode() != null) donor.setPincode(donorDto.getPincode());
             donor.setPanNumber(StringUtils.hasText(donorDto.getPanNumber()) ? donorDto.getPanNumber() : null);
             if (StringUtils.hasText(donorDto.getZone())) donor.setZone(donorDto.getZone());
-            if (StringUtils.hasText(donorDto.getCategory())) donor.setCategory(donorDto.getCategory());
             if (StringUtils.hasText(donorDto.getRemark())) donor.setRemark(donorDto.getRemark());
+            if (StringUtils.hasText(donorDto.getType())) donor.setType(donorDto.getType());
 
             // Update special days if provided
             if (donorDto.getSpecialDays() != null && !donorDto.getSpecialDays().isEmpty()) {
@@ -122,7 +123,8 @@ public class DonorService {
                 d.getCategory(),
                 d.getType(),
                 d.getUsername(),
-                d.getRemark()
+                d.getRemark(),
+                d.getTotalDonatedAmount()
         )).collect(Collectors.toList());
     }
 
@@ -172,6 +174,7 @@ public class DonorService {
                 .type(storedDonor.getType())
                 .username(storedDonor.getUsername())
                 .supervisorName(null)
+                .totalDonatedAmount(storedDonor.getTotalDonatedAmount())
                 .build();
     }
 

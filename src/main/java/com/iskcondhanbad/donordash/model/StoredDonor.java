@@ -65,6 +65,9 @@ public class StoredDonor {
     @Column(nullable = true)
     private String remark;
 
+    @Column(nullable = true)
+    private Double totalDonatedAmount = 0.0;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "donor_cultivator_id", nullable = false)
     @JsonIgnore
