@@ -1,25 +1,32 @@
 package com.iskcondhanbad.donordash;
 
+import io.github.cdimascio.dotenv.Dotenv;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration;
 import org.springframework.web.bind.annotation.CrossOrigin;
-import io.github.cdimascio.dotenv.Dotenv;
-
 
 @CrossOrigin
 @SpringBootApplication(exclude = {SecurityAutoConfiguration.class})
 public class DonordashApplication {
 
     public static void main(String[] args) {
-        // Set system properties if needed elsewhere in the app
-        System.setProperty("DATABASE_URL", System.getenv("DATABASE_URL"));
-        System.setProperty("DATABASE_USERNAME", System.getenv("DATABASE_USERNAME"));
-        System.setProperty("DATABASE_PASSWORD", System.getenv("DATABASE_PASSWORD"));
-        System.setProperty("RAZORPAY_KEY_ID", System.getenv("RAZORPAY_KEY_ID"));
-        System.setProperty("RAZORPAY_KEY_SECRET", System.getenv("RAZORPAY_KEY_SECRET"));
-        System.setProperty("MAIL_USERNAME", System.getenv("MAIL_USERNAME"));
-        System.setProperty("MAIL_PASSWORD", System.getenv("MAIL_PASSWORD"));
+        Dotenv dotenv = Dotenv.configure().ignoreIfMissing().load();
+
+        String[] envVars = {
+                "DATABASE_URL", "DATABASE_USERNAME", "DATABASE_PASSWORD",
+                "RAZORPAY_KEY_ID", "RAZORPAY_KEY_SECRET",
+                "MAIL_USERNAME", "MAIL_PASSWORD"
+        };
+        for (String envVar : envVars) {
+            String value = System.getenv(envVar);
+            if (value == null) {
+                value = dotenv.get(envVar);
+            }
+            if (value != null) {
+                System.setProperty(envVar, value);
+            }
+        }
 
         SpringApplication.run(DonordashApplication.class, args);
     }

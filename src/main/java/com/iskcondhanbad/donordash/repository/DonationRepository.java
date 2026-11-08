@@ -56,6 +56,7 @@ public interface DonationRepository extends JpaRepository<StoredDonation, Long> 
                     "AND (:donorIds IS NULL OR d.id IN :donorIds) " +
                     "AND (:minAmount IS NULL OR sd.amount >= :minAmount) " +
                     "AND (:maxAmount IS NULL OR sd.amount <= :maxAmount) " +
+                    "AND (:notGenerateReceipt IS NULL OR sd.notGenerateReceipt = :notGenerateReceipt) " +
                     "ORDER BY sd.paymentDate DESC, sd.createdAt DESC"
     )
     List<Donation> findDonationsByFilter(
@@ -69,15 +70,14 @@ public interface DonationRepository extends JpaRepository<StoredDonation, Long> 
             @Param("donorId") Integer donorId,
             @Param("donorIds") List<Integer> donorIds,
             @Param("minAmount") Double minAmount,
-            @Param("maxAmount") Double maxAmount
+            @Param("maxAmount") Double maxAmount,
+            @Param("notGenerateReceipt") Boolean notGenerateReceipt
     );
 
 
     Optional<StoredDonation> findByTransactionId(String transactionId);
 
     List<StoredDonation> findByDonorId(Integer donorId);
-
-    List<StoredDonation> findByDonorIdAndPaymentDateBetween(Integer donorId, Date paymentDateStart, Date paymentDateEnd);
 
     @Query("SELECT d.paymentMode, SUM(d.amount) FROM StoredDonation d " +
             "WHERE (:collectedById IS NULL OR d.collectedBy.id = :collectedById) " +

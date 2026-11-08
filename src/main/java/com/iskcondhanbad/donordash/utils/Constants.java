@@ -55,6 +55,7 @@ public class Constants {
 
     public static final double CASH_DONATION_PAN_THRESHOLD = 49_999.0;
     public static final double CUMULATIVE_DONATION_PAN_THRESHOLD = 100_000.0;
+    public static final double CASH_DONATION_ANNUAL_LIMIT = 200_000.0;
 
     public static Date getCurrentFinancialYearStart() {
         LocalDate today = LocalDate.now();

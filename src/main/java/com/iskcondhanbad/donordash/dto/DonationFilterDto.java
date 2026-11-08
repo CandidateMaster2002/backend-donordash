@@ -21,4 +21,5 @@ public class DonationFilterDto {
     private Integer collectedById;
     private String status;
     private String paymentMode;
+    private Boolean notGenerateReceipt;
 }

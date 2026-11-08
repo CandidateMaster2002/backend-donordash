@@ -310,7 +310,8 @@ public class DonationService {
                                 ? null
                                 : filter.getDonorIds(),
                         filter.getMinAmount() > 0 ? filter.getMinAmount() : null,
-                        filter.getMaxAmount() > 0 ? filter.getMaxAmount() : null
+                        filter.getMaxAmount() > 0 ? filter.getMaxAmount() : null,
+                        filter.getNotGenerateReceipt()
                 ).stream()
                 .map(transformer)
                 .toList();
@@ -553,7 +554,9 @@ public class DonationService {
                                   @NonNull final CreateDonationRequest createDonationRequest) {
         Date fyStart = Constants.getCurrentFinancialYearStart();
         Date fyEnd = Constants.getCurrentFinancialYearEnd();
-        
+        boolean notGenerateReceipt = Boolean.TRUE.equals(createDonationRequest.getNotGenerateReceipt());
+        double amount = Objects.nonNull(createDonationRequest.getAmount()) ? createDonationRequest.getAmount() : 0.0;
+
         // Validation 1: Check if donation is within current financial year
         if (donationDate.before(fyStart) || donationDate.after(fyEnd)) {
             String message = String.format(
@@ -566,9 +569,6 @@ public class DonationService {
 
         // Validation 2: Cash donation > 49,999 requires PAN when receipt is to be generated
         if (Constants.CASH.equalsIgnoreCase(createDonationRequest.getPaymentMode())) {
-            double amount = Objects.nonNull(createDonationRequest.getAmount()) ? createDonationRequest.getAmount() : 0.0;
-            boolean notGenerateReceipt = Boolean.TRUE.equals(createDonationRequest.getNotGenerateReceipt());
-            
             if (amount > Constants.CASH_DONATION_PAN_THRESHOLD && !notGenerateReceipt) {
                 if (isBlank(storedDonor.getPanNumber())) {
                     throw new IllegalArgumentException(
@@ -579,21 +579,29 @@ public class DonationService {
         }
 
         // Validation 3: Cumulative donations > 1,00,000 in FY requires PAN
-        double currentDonationAmount = Objects.nonNull(createDonationRequest.getAmount()) ? createDonationRequest.getAmount() : 0.0;
-        List<StoredDonation> existingDonations = donationRepository.findByDonorIdAndPaymentDateBetween(
-                storedDonor.getId(),
-                fyStart,
-                fyEnd
-        );
-        
-        double totalDonations = currentDonationAmount + existingDonations.stream()
-                .mapToDouble(StoredDonation::getAmount)
-                .sum();
-        
-        if (totalDonations > Constants.CUMULATIVE_DONATION_PAN_THRESHOLD) {
-            if (isBlank(storedDonor.getPanNumber())) {
+        if (!notGenerateReceipt) {
+            double totalDonations = amount + donationRepository.findDonationsByFilter(
+                    fyStart, fyEnd,null, null, null, null, null, storedDonor.getId(), null, null, null, false
+            ).stream().mapToDouble(Donation::getAmount).sum();
+
+            if (totalDonations > Constants.CUMULATIVE_DONATION_PAN_THRESHOLD) {
+                if (isBlank(storedDonor.getPanNumber())) {
+                    throw new IllegalArgumentException(
+                            "As per Income Tax regulations, this donor's cumulative donations in the current financial year have exceeded ₹1,00,000. Please update the donor's profile with a valid PAN number before adding further donations"
+                    );
+                }
+            }
+        }
+
+        // Validation 4: Total cash donations (excluding Shyam Cash) by the donor should not exceed ₹2,00,000 in the FY
+        if (Constants.CASH.equalsIgnoreCase(createDonationRequest.getPaymentMode()) && !notGenerateReceipt) {
+            double totalCash = amount + donationRepository.findDonationsByFilter(
+                    fyStart, fyEnd, null, null, null, null, Constants.CASH, storedDonor.getId(), null, null, null, false
+            ).stream().mapToDouble(Donation::getAmount).sum();
+
+            if (totalCash > Constants.CASH_DONATION_ANNUAL_LIMIT) {
                 throw new IllegalArgumentException(
-                        "As per Income Tax regulations, this donor's cumulative donations in the current financial year have exceeded ₹1,00,000. Please update the donor's profile with a valid PAN number before adding further donations"
+                        "Total cash donations by this donor cannot exceed ₹2,00,000 in a financial year"
                 );
             }
         }
