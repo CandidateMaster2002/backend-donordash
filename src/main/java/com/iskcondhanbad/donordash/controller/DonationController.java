@@ -3,12 +3,17 @@ package com.iskcondhanbad.donordash.controller;
 import com.iskcondhanbad.donordash.dto.*;
 import com.iskcondhanbad.donordash.model.StoredDonation;
 import com.iskcondhanbad.donordash.service.DonationService;
+import com.iskcondhanbad.donordash.service.PdfReceiptService;
 import com.iskcondhanbad.donordash.service.RazorpayService;
+import com.iskcondhanbad.donordash.service.WhatsAppService;
 import com.iskcondhanbad.donordash.utils.Constants;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.http.ContentDisposition;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -25,6 +30,12 @@ public class DonationController {
 
     @Autowired
     private RazorpayService razorpayService;
+
+    @Autowired
+    private PdfReceiptService pdfReceiptService;
+
+    @Autowired
+    private WhatsAppService whatsAppService;
 
     @PostMapping("/donate")
     public ResponseEntity<?> donate(@RequestBody CreateDonationRequest createDonationRequest) {
@@ -147,6 +158,43 @@ public class DonationController {
             return ResponseEntity.ok(receipt);
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    @GetMapping("/receipt/{donationId}/pdf")
+    public ResponseEntity<?> getReceiptPdf(@PathVariable Long donationId) {
+        try {
+            byte[] pdfBytes = pdfReceiptService.generateReceiptPdf(donationId);
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_PDF);
+            headers.setContentDisposition(ContentDisposition.inline()
+                    .filename("receipt_" + donationId + ".pdf")
+                    .build());
+            return new ResponseEntity<>(pdfBytes, headers, HttpStatus.OK);
+        } catch (Exception e) {
+            log.error("Failed to generate PDF for donationId: {}", donationId, e);
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .body(new ApiResponseDto<>(false, "Failed to generate receipt PDF: " + e.getMessage()));
+        }
+    }
+
+    @PostMapping({"/send-whatsapp/{donationId}"})
+    public ResponseEntity<?> sendReceiptWhatsApp(@PathVariable Long donationId) {
+        try {
+            WhatsAppSendResponseDto response = whatsAppService.sendDonationReceipt(donationId);
+            return ResponseEntity.ok(new ApiResponseDto<>(true, "WhatsApp receipt sent successfully", response));
+        } catch (IllegalArgumentException e) {
+            log.error("Validation error sending WhatsApp receipt for donationId {}: {}", donationId, e.getMessage());
+            return ResponseEntity.badRequest().body(new ApiResponseDto<>(false, e.getMessage()));
+        } catch (IllegalStateException e) {
+            log.error("Configuration/state error sending WhatsApp receipt for donationId {}: {}", donationId, e.getMessage());
+            return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
+                    .body(new ApiResponseDto<>(false, e.getMessage()));
+        } catch (Exception e) {
+            log.error("Error sending WhatsApp receipt for donationId {}: ", donationId, e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new ApiResponseDto<>(false, "Failed to send WhatsApp receipt: " + e.getMessage()));
         }
     }
 

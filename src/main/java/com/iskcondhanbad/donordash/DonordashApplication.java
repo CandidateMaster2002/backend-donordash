@@ -16,7 +16,12 @@ public class DonordashApplication {
         String[] envVars = {
                 "DATABASE_URL", "DATABASE_USERNAME", "DATABASE_PASSWORD",
                 "RAZORPAY_KEY_ID", "RAZORPAY_KEY_SECRET",
-                "MAIL_USERNAME", "MAIL_PASSWORD"
+                "MAIL_USERNAME", "MAIL_PASSWORD",
+                "WHATSAPP_PHONE_NUMBER_ID", "WHATSAPP_ACCESS_TOKEN",
+                "WHATSAPP_TEMPLATE_NAME", "WHATSAPP_TEMPLATE_LANGUAGE",
+                "WHATSAPP_API_VERSION",
+                "WHATSAPP_PARAM_NAME", "WHATSAPP_PARAM_ADDRESS",
+                "WHATSAPP_PARAM_PAN", "WHATSAPP_PARAM_AMOUNT"
         };
         for (String envVar : envVars) {
             String value = System.getenv(envVar);
