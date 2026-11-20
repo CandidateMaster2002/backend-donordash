@@ -24,22 +24,22 @@ public class PdfReceiptServiceTest {
         PdfReceiptService service = new PdfReceiptService();
 
         ReceiptDto receipt = new ReceiptDto();
-        receipt.setDonationId("12345");
-        receipt.setReceiptNumber("REC-2026-001");
-        receipt.setPaymentDate("2026-11-10");
-        receipt.setAmount(5100.0);
-        receipt.setDonorName("Radha Krishna Das");
-        receipt.setDonorAddress("108 Temple Street");
-        receipt.setCity("Dhanbad");
-        receipt.setState("Jharkhand");
-        receipt.setDonorPIN("826001");
-        receipt.setPan("ABCDE1234F");
-        receipt.setMobile("9876543210");
-        receipt.setEmail("devotee@example.com");
-        receipt.setPaymentMode("UPI");
-        receipt.setTransactionID("UPI/20261110/998877");
-        receipt.setPurpose("General Donation");
-        receipt.setDonorCultivatorId("2");
+        receipt.setDonationId("2328");
+        receipt.setReceiptNumber("ISKDHN-SUM-000051");
+        receipt.setPaymentDate("2026-04-28");
+        receipt.setAmount(3501.0);
+        receipt.setDonorName("Kush Milkesh Mistry");
+        receipt.setDonorAddress("B-146, The Gold City, Near Dhaniyavi Chokdi, Tarsali Bypass NH-8, Tarsali");
+        receipt.setCity("Vadodara");
+        receipt.setState("Gujarat");
+        receipt.setDonorPIN("390009");
+        receipt.setPan("GZVPM9347A");
+        receipt.setMobile("7984399849");
+        receipt.setEmail("kushmistry2021@gmail.com");
+        receipt.setPaymentMode("Bank Transfer");
+        receipt.setTransactionID("648443097400");
+        receipt.setPurpose("Temple Construction");
+        receipt.setDonorCultivatorId("8");
 
         byte[] pdfBytes = service.generatePdfFromReceiptDto(receipt);
 

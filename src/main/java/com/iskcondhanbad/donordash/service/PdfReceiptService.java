@@ -5,6 +5,7 @@ import com.iskcondhanbad.donordash.utils.NumberToWordsUtil;
 import com.lowagie.text.*;
 import com.lowagie.text.Font;
 import com.lowagie.text.Image;
+import com.lowagie.text.Rectangle;
 import com.lowagie.text.pdf.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,6 +18,7 @@ import java.io.InputStream;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.Locale;
 
 @Slf4j
 @Service
@@ -25,42 +27,141 @@ public class PdfReceiptService {
     @Autowired
     private DonationService donationService;
 
-    // Palette matching frontend styling
-    private static final Color ISKCON_BLUE = new Color(2, 62, 125);
-    private static final Color ACCENT_PINK = new Color(255, 54, 171);
-    private static final Color DONOR_COPY_PINK = new Color(255, 135, 171);
-    private static final Color LABEL_PINK = new Color(255, 10, 84);
-    private static final Color YELLOW_BG = new Color(255, 243, 176);
-    private static final Color BORDER_RED = new Color(208, 0, 0);
-    private static final Color LIGHT_GRAY_BG = new Color(245, 245, 245);
-    private static final Color TEXT_DARK = new Color(20, 20, 20);
+    // Palette matching frontend styling exactly
+    private static final Color ISKCON_BLUE = new Color(2, 62, 125);       // #023e7d
+    private static final Color ACCENT_PINK = new Color(255, 54, 171);     // #ff36ab
+    private static final Color DONOR_COPY_PINK = new Color(255, 135, 171);// #ff87ab
+    private static final Color LABEL_PINK = new Color(255, 10, 84);       // #ff0a54
+    private static final Color YELLOW_BG = new Color(255, 229, 102);      // #ffe566
+    private static final Color BORDER_RED = new Color(208, 0, 0);         // #d00000
+    private static final Color LIGHT_GRAY_BG = new Color(238, 238, 238);  // #eeeeee
+    private static final Color TEXT_DARK = new Color(0, 0, 0);            // #000000
 
-    // Uniformly proportional font hierarchy matching React PDF_Components exactly
-    private static final Font FONT_HEADING = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 22, ISKCON_BLUE);
-    private static final Font FONT_SUBHEADING = FontFactory.getFont(FontFactory.HELVETICA_OBLIQUE, 12, ISKCON_BLUE);
-    private static final Font FONT_RECEIPT_NO = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 20, TEXT_DARK);
-    private static final Font FONT_RECEIPT_NO_TAG = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 14, ACCENT_PINK);
-    private static final Font FONT_DONOR_COPY = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 16, Color.WHITE);
-    private static final Font FONT_DATE = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 12, TEXT_DARK);
-    private static final Font FONT_PREACHING_TITLE = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 12, TEXT_DARK);
-    private static final Font FONT_PREACHING_TEXT = FontFactory.getFont(FontFactory.HELVETICA, 11, TEXT_DARK);
+    private static BaseFont BF_HELVETICA_BOLD;
+    private static BaseFont BF_HELVETICA;
+    static {
+        try {
+            BF_HELVETICA_BOLD = BaseFont.createFont(BaseFont.HELVETICA_BOLD, BaseFont.WINANSI, BaseFont.NOT_EMBEDDED);
+            BF_HELVETICA = BaseFont.createFont(BaseFont.HELVETICA, BaseFont.WINANSI, BaseFont.NOT_EMBEDDED);
+        } catch (Exception e) {
+            log.error("Failed to initialize BaseFonts", e);
+        }
+    }
 
-    private static final Font FONT_AMOUNT_WORDS = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 16, TEXT_DARK);
-    private static final Font FONT_AMOUNT_NUM = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 18, TEXT_DARK);
+    // Font hierarchy
+    private static final Font FONT_HEADING = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 22.5f, ISKCON_BLUE);
+    private static final Font FONT_SUBHEADING = FontFactory.getFont(FontFactory.HELVETICA_OBLIQUE, 11.5f, ISKCON_BLUE);
 
-    private static final Font FONT_BOX_TAG = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 13, LABEL_PINK);
-    private static final Font FONT_DONOR_LABEL = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 14, TEXT_DARK);
-    private static final Font FONT_DONOR_VALUE = FontFactory.getFont(FontFactory.HELVETICA, 14, TEXT_DARK);
+    private static final Font FONT_RECEIPT_NO_TITLE = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 17.5f, ACCENT_PINK);
+    private static final Font FONT_RECEIPT_NO_SUB = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 13.5f, ACCENT_PINK);
+    private static final Font FONT_RECEIPT_NO_VAL = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 20f, TEXT_DARK);
+    private static final Font FONT_DONOR_COPY = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 16.5f, Color.WHITE);
+    private static final Font FONT_DATE_VAL = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 17.5f, TEXT_DARK);
 
-    private static final Font FONT_PAYMENT_LABEL = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 12, LABEL_PINK);
-    private static final Font FONT_PAYMENT_VALUE = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 16, TEXT_DARK);
+    private static final Font FONT_PREACHING_TITLE = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 11.5f, TEXT_DARK);
+    private static final Font FONT_PREACHING_TEXT = FontFactory.getFont(FontFactory.HELVETICA, 10.5f, TEXT_DARK);
 
-    private static final Font FONT_SIGN_LABEL = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 11, LABEL_PINK);
-    private static final Font FONT_FOOTER = FontFactory.getFont(FontFactory.HELVETICA, 11, TEXT_DARK);
+    private static final Font FONT_AMOUNT_WORDS = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 17.5f, TEXT_DARK);
+    private static final Font FONT_AMOUNT_NUM = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 19.5f, TEXT_DARK);
 
-    private static final Font FONT_PAGE2_HEADING = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 14, TEXT_DARK);
-    private static final Font FONT_PAGE2_BULLET = FontFactory.getFont(FontFactory.HELVETICA, 11.5f, TEXT_DARK);
-    private static final Font FONT_PAGE2_MANTRA = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 13.5f, ISKCON_BLUE);
+    private static final Font FONT_DONOR_LABEL = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 14.5f, TEXT_DARK);
+    private static final Font FONT_DONOR_VALUE = FontFactory.getFont(FontFactory.HELVETICA, 14.5f, TEXT_DARK);
+
+    private static final Font FONT_PAYMENT_VALUE = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 16.5f, TEXT_DARK);
+    private static final Font FONT_FOOTER = FontFactory.getFont(FontFactory.HELVETICA, 11.5f, TEXT_DARK);
+
+    // Page 2 fonts
+    private static final Font FONT_PAGE2_HEADING = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 16.5f, TEXT_DARK);
+    private static final Font FONT_PAGE2_BULLET = FontFactory.getFont(FontFactory.HELVETICA, 13f, TEXT_DARK);
+    private static final Font FONT_PAGE2_MANTRA = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 16.5f, ISKCON_BLUE);
+
+    /**
+     * Cell event that renders a rounded rectangular box with a border-cutting legend tag
+     * matching the frontend fieldset/legend styling.
+     */
+    public static class RoundedLegendBoxEvent implements PdfPCellEvent {
+        private final String legendText;
+        private final Color tagColor;
+        private final Color borderColor;
+        private final Color bgColor;
+        private final float cornerRadius;
+        private final boolean isBottomTag;
+        private final float tagOffsetPercent; // < 0 for centered, 0.0-1.0 for offset from left
+        private final float tagFontSize;
+        private final BaseFont baseFont;
+
+        public RoundedLegendBoxEvent(String legendText, Color tagColor, Color borderColor, Color bgColor,
+                                     float cornerRadius, boolean isBottomTag, float tagOffsetPercent,
+                                     float tagFontSize, BaseFont baseFont) {
+            this.legendText = legendText;
+            this.tagColor = tagColor;
+            this.borderColor = borderColor;
+            this.bgColor = bgColor;
+            this.cornerRadius = cornerRadius;
+            this.isBottomTag = isBottomTag;
+            this.tagOffsetPercent = tagOffsetPercent;
+            this.tagFontSize = tagFontSize;
+            this.baseFont = baseFont;
+        }
+
+        @Override
+        public void cellLayout(PdfPCell cell, Rectangle position, PdfContentByte[] canvases) {
+            float x = position.getLeft();
+            float y = position.getBottom();
+            float w = position.getWidth();
+            float h = position.getHeight();
+
+            PdfContentByte bgCanvas = canvases[PdfPTable.BACKGROUNDCANVAS];
+            bgCanvas.saveState();
+            bgCanvas.setColorFill(bgColor);
+            bgCanvas.setColorStroke(borderColor);
+            bgCanvas.setLineWidth(1.0f);
+            bgCanvas.roundRectangle(x, y, w, h, cornerRadius);
+            bgCanvas.fillStroke();
+            bgCanvas.restoreState();
+
+            if (legendText != null && !legendText.isBlank() && baseFont != null) {
+                float textWidth = baseFont.getWidthPoint(legendText, tagFontSize);
+                float padX = 8.0f;
+                float padY = 2.5f;
+                float tagW = textWidth + (2 * padX);
+                float tagH = tagFontSize + (2 * padY);
+
+                float tagX;
+                if (tagOffsetPercent < 0) {
+                    tagX = x + (w - tagW) / 2.0f;
+                } else {
+                    tagX = x + (w * tagOffsetPercent);
+                    if (tagX < x + cornerRadius + 2) {
+                        tagX = x + cornerRadius + 2;
+                    }
+                    if (tagX + tagW > x + w - cornerRadius - 2) {
+                        tagX = x + w - cornerRadius - 2 - tagW;
+                    }
+                }
+
+                float borderY = isBottomTag ? y : (y + h);
+                float tagY = borderY - (tagH / 2.0f);
+
+                PdfContentByte textCanvas = canvases[PdfPTable.TEXTCANVAS];
+                textCanvas.saveState();
+
+                // Erase the border line by filling tag background
+                textCanvas.setColorFill(bgColor);
+                textCanvas.roundRectangle(tagX, tagY, tagW, tagH, 3.0f);
+                textCanvas.fill();
+
+                // Draw tag text
+                textCanvas.beginText();
+                textCanvas.setFontAndSize(baseFont, tagFontSize);
+                textCanvas.setColorFill(tagColor);
+                float textBaseline = tagY + padY + 1.2f;
+                textCanvas.showTextAligned(Element.ALIGN_CENTER, legendText, tagX + (tagW / 2.0f), textBaseline, 0);
+                textCanvas.endText();
+                textCanvas.restoreState();
+            }
+        }
+    }
 
     /**
      * Generates a PDF receipt for the given donation ID.
@@ -75,7 +176,7 @@ public class PdfReceiptService {
      */
     public byte[] generatePdfFromReceiptDto(ReceiptDto receipt) {
         try (ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
-            Document document = new Document(PageSize.A4.rotate(), 12, 12, 10, 10);
+            Document document = new Document(PageSize.A4.rotate(), 16, 16, 12, 12);
             PdfWriter writer = PdfWriter.getInstance(document, baos);
 
             // Load background image for Page 1
@@ -114,153 +215,210 @@ public class PdfReceiptService {
     }
 
     private void buildPageOne(Document document, ReceiptDto receipt) throws Exception {
-        PdfPTable mainTable = new PdfPTable(1);
-        mainTable.setWidthPercentage(100);
-        mainTable.setSpacingAfter(0);
+        // 1. Top Most Header: Center aligned, spanning full width
+        Paragraph title = new Paragraph("International Society for Krishna Consciousness (ISKCON)", FONT_HEADING);
+        title.setAlignment(Element.ALIGN_CENTER);
+        title.setSpacingBefore(0);
+        title.setSpacingAfter(2);
+        document.add(title);
 
-        // 1. Top Header Row: Logo + ISKCON Info + Preaching Center & Receipt No
-        PdfPTable headerTable = new PdfPTable(new float[]{1.35f, 4.65f});
-        headerTable.setWidthPercentage(100);
+        Paragraph subtitle = new Paragraph("Founder-Acharya: His Divine Grace A. C. Bhaktivedanta Swami Prabhupada", FONT_SUBHEADING);
+        subtitle.setAlignment(Element.ALIGN_CENTER);
+        subtitle.setSpacingAfter(12); // Space between header and lower section
+        document.add(subtitle);
 
-        // Logo cell
+        // 2. Lower Section: Logo, Address box, and Receipt section all in the SAME ROW LEVEL
+        PdfPTable topRowTable = new PdfPTable(new float[]{1.15f, 2.30f, 2.55f});
+        topRowTable.setWidthPercentage(100);
+
+        // Col 1: Logo (Left - enlarged)
         Image logoImage = loadClasspathImage("pdf/logo.png");
         PdfPCell logoCell = new PdfPCell();
         logoCell.setBorder(Rectangle.NO_BORDER);
         logoCell.setVerticalAlignment(Element.ALIGN_MIDDLE);
         logoCell.setHorizontalAlignment(Element.ALIGN_CENTER);
         if (logoImage != null) {
-            logoImage.scaleToFit(150, 100);
+            logoImage.scaleToFit(165, 110);
             logoCell.addElement(logoImage);
         }
-        headerTable.addCell(logoCell);
+        topRowTable.addCell(logoCell);
 
-        // Header right cell (Titles + Sub-boxes)
-        PdfPCell headerRightCell = new PdfPCell();
-        headerRightCell.setBorder(Rectangle.NO_BORDER);
-
-        Paragraph title = new Paragraph("International Society for Krishna Consciousness (ISKCON)", FONT_HEADING);
-        title.setAlignment(Element.ALIGN_CENTER);
-        headerRightCell.addElement(title);
-
-        Paragraph subtitle = new Paragraph("Founder-Acharya: His Divine Grace A. C. Bhaktivedanta Swami Prabhupada", FONT_SUBHEADING);
-        subtitle.setAlignment(Element.ALIGN_CENTER);
-        subtitle.setSpacingAfter(3);
-        headerRightCell.addElement(subtitle);
-
-        // Row of 2 boxes: Preaching Centre Box (Left) and Receipt No / Date Box (Right)
-        PdfPTable subHeaderTable = new PdfPTable(new float[]{1.2f, 1f});
-        subHeaderTable.setWidthPercentage(100);
-
-        // Preaching Centre Box
+        // Col 2: Preaching Centre Address Box (Center)
         PdfPCell centreBoxCell = new PdfPCell();
         centreBoxCell.setBackgroundColor(YELLOW_BG);
         centreBoxCell.setBorderColor(BORDER_RED);
         centreBoxCell.setBorderWidth(1);
-        centreBoxCell.setPadding(6);
+        centreBoxCell.setPadding(4);
+        centreBoxCell.setPaddingLeft(6);
+        centreBoxCell.setPaddingRight(6);
+        centreBoxCell.setVerticalAlignment(Element.ALIGN_MIDDLE);
 
         Paragraph centreText = new Paragraph();
         centreText.setAlignment(Element.ALIGN_CENTER);
+        centreText.setLeading(12.5f);
         centreText.add(new Chunk("Preaching Centre\n", FONT_PREACHING_TITLE));
-        centreText.add(new Chunk("Doctor's colony, Near Central Hospital (BCCL),\nJagjiwan Nagar, Dhanbad, Jharkhand\nPIN: 826003 | Mobile: 7644070770 / 9903013399\nEmail: acc.iskcondhanbad@gmail.com", FONT_PREACHING_TEXT));
+        centreText.add(new Chunk("Doctor's colony, Near Central Hospital (BCCL),\nJagjiwan Nagar, Dhanbad, Jharkhand\nPIN: 826003\nMobile No: 7644070770/9903013399\nEmail: acc.iskcondhanbad@gmail.com", FONT_PREACHING_TEXT));
         centreBoxCell.addElement(centreText);
-        subHeaderTable.addCell(centreBoxCell);
+        topRowTable.addCell(centreBoxCell);
 
-        // Receipt No & Date Box
-        PdfPCell receiptHeaderCell = new PdfPCell();
-        receiptHeaderCell.setBorder(Rectangle.NO_BORDER);
-        receiptHeaderCell.setPaddingLeft(10);
+        // Col 3: Receipt No & Date Section (Right)
+        PdfPCell receiptCell = new PdfPCell();
+        receiptCell.setBorder(Rectangle.NO_BORDER);
+        receiptCell.setPaddingLeft(10);
+        receiptCell.setVerticalAlignment(Element.ALIGN_MIDDLE);
 
-        PdfPTable receiptMetaTable = new PdfPTable(new float[]{1.1f, 1.9f});
-        receiptMetaTable.setWidthPercentage(100);
+        // Sub-table Row 1: Receipt Number (Single line)
+        PdfPTable rNoTable = new PdfPTable(new float[]{0.95f, 2.05f});
+        rNoTable.setWidthPercentage(100);
 
-        // Receipt No row
-        PdfPCell rNoLabel = new PdfPCell(new Phrase("Donation\nReceipt No.", FONT_RECEIPT_NO_TAG));
+        PdfPCell rNoLabel = new PdfPCell();
         rNoLabel.setBorder(Rectangle.NO_BORDER);
         rNoLabel.setVerticalAlignment(Element.ALIGN_MIDDLE);
-        receiptMetaTable.addCell(rNoLabel);
+        Paragraph rNoPara = new Paragraph();
+        rNoPara.add(new Chunk("Donation\n", FONT_RECEIPT_NO_TITLE));
+        rNoPara.add(new Chunk("Receipt No.", FONT_RECEIPT_NO_SUB));
+        rNoLabel.addElement(rNoPara);
+        rNoTable.addCell(rNoLabel);
 
-        PdfPCell rNoVal = new PdfPCell(new Phrase(receipt.getReceiptNumber() != null ? receipt.getReceiptNumber() : "N/A", FONT_RECEIPT_NO));
+        PdfPCell rNoVal = new PdfPCell();
         rNoVal.setBorder(Rectangle.NO_BORDER);
         rNoVal.setVerticalAlignment(Element.ALIGN_MIDDLE);
-        receiptMetaTable.addCell(rNoVal);
+        rNoVal.setPaddingLeft(10);
+        Paragraph rNoValPara = new Paragraph(receipt.getReceiptNumber() != null ? receipt.getReceiptNumber() : "N/A", FONT_RECEIPT_NO_VAL);
+        rNoVal.addElement(rNoValPara);
+        rNoTable.addCell(rNoVal);
 
-        // Donor's copy badge + Date row
-        PdfPCell donorCopyCell = new PdfPCell(new Phrase("DONOR'S\nCOPY", FONT_DONOR_COPY));
+        receiptCell.addElement(rNoTable);
+
+        // Sub-table Row 2: DONOR'S COPY + Date box with "Date" legend tag
+        PdfPTable donorDateTable = new PdfPTable(new float[]{0.95f, 2.05f});
+        donorDateTable.setWidthPercentage(100);
+        donorDateTable.setSpacingBefore(7);
+
+        PdfPCell donorCopyCell = new PdfPCell();
         donorCopyCell.setBackgroundColor(DONOR_COPY_PINK);
         donorCopyCell.setHorizontalAlignment(Element.ALIGN_CENTER);
         donorCopyCell.setVerticalAlignment(Element.ALIGN_MIDDLE);
         donorCopyCell.setBorder(Rectangle.NO_BORDER);
-        donorCopyCell.setPadding(5);
-        receiptMetaTable.addCell(donorCopyCell);
+        donorCopyCell.setPadding(3);
+        donorCopyCell.setPaddingTop(5);
+        donorCopyCell.setPaddingBottom(5);
+        donorCopyCell.setMinimumHeight(36f);
+        Paragraph donorCopyPara = new Paragraph();
+        donorCopyPara.setAlignment(Element.ALIGN_CENTER);
+        donorCopyPara.setLeading(14f);
+        donorCopyPara.add(new Chunk("DONOR'S\nCOPY", FONT_DONOR_COPY));
+        donorCopyCell.addElement(donorCopyPara);
+        donorDateTable.addCell(donorCopyCell);
 
         String formattedDate = formatDateString(receipt.getPaymentDate());
-        PdfPCell dateCell = new PdfPCell(new Phrase("Date: " + formattedDate, FONT_DATE));
-        dateCell.setBackgroundColor(LIGHT_GRAY_BG);
-        dateCell.setBorderColor(Color.LIGHT_GRAY);
-        dateCell.setBorderWidth(1);
-        dateCell.setHorizontalAlignment(Element.ALIGN_CENTER);
+        PdfPCell dateCell = new PdfPCell();
+        dateCell.setBorder(Rectangle.NO_BORDER);
+        dateCell.setPadding(4);
+        dateCell.setPaddingTop(7);
+        dateCell.setPaddingBottom(4);
+        dateCell.setMinimumHeight(36f);
         dateCell.setVerticalAlignment(Element.ALIGN_MIDDLE);
-        dateCell.setPadding(6);
-        receiptMetaTable.addCell(dateCell);
+        dateCell.setHorizontalAlignment(Element.ALIGN_CENTER);
+        dateCell.setCellEvent(new RoundedLegendBoxEvent(
+                "Date", LABEL_PINK, Color.RED, LIGHT_GRAY_BG,
+                4f, false, -1, 12.5f, BF_HELVETICA_BOLD
+        ));
+        Paragraph datePara = new Paragraph(formattedDate, FONT_DATE_VAL);
+        datePara.setAlignment(Element.ALIGN_CENTER);
+        dateCell.addElement(datePara);
+        donorDateTable.addCell(dateCell);
 
-        receiptHeaderCell.addElement(receiptMetaTable);
-        subHeaderTable.addCell(receiptHeaderCell);
+        receiptCell.addElement(donorDateTable);
+        topRowTable.addCell(receiptCell);
 
-        headerRightCell.addElement(subHeaderTable);
-        headerTable.addCell(headerRightCell);
+        document.add(topRowTable);
 
-        document.add(headerTable);
+        // 3. Amount Input Box: Significant space between Address/Receipt and Amount Box
+        PdfPTable amountOuterTable = new PdfPTable(1);
+        amountOuterTable.setWidthPercentage(100);
+        amountOuterTable.setSpacingBefore(20); // Significant space between address/receipt and amount box
+        amountOuterTable.setSpacingAfter(20);  // Proper space before Donor Details while keeping alignment
 
-        // 2. Amount Input Box (Words + Number)
-        PdfPTable amountTable = new PdfPTable(new float[]{3.4f, 1.6f});
-        amountTable.setWidthPercentage(100);
-        amountTable.setSpacingBefore(7);
-        amountTable.setSpacingAfter(7);
+        PdfPCell amountOuterCell = new PdfPCell();
+        amountOuterCell.setBorder(Rectangle.NO_BORDER);
+        amountOuterCell.setPadding(9);
+        amountOuterCell.setPaddingTop(13);
+        amountOuterCell.setPaddingBottom(9);
+        amountOuterCell.setCellEvent(new RoundedLegendBoxEvent(
+                "Donation Amount in Rupees", LABEL_PINK, Color.RED, LIGHT_GRAY_BG,
+                4f, false, -1, 13f, BF_HELVETICA_BOLD
+        ));
+
+        PdfPTable amountInnerTable = new PdfPTable(new float[]{3.4f, 1.6f});
+        amountInnerTable.setWidthPercentage(100);
 
         long amountInt = Math.round(receipt.getAmount());
         String words = NumberToWordsUtil.convertToWords(amountInt);
-        DecimalFormat df = new DecimalFormat("#,##,##0.00");
-        String formattedAmount = "Rs. " + df.format(receipt.getAmount()) + "/-";
 
-        PdfPCell amountWordsCell = new PdfPCell();
-        amountWordsCell.setBackgroundColor(LIGHT_GRAY_BG);
-        amountWordsCell.setBorderColor(BORDER_RED);
-        amountWordsCell.setBorderWidth(1);
-        amountWordsCell.setPadding(8);
-        amountWordsCell.setVerticalAlignment(Element.ALIGN_MIDDLE);
-        amountWordsCell.addElement(new Paragraph("Amount in words: " + words, FONT_AMOUNT_WORDS));
-        amountTable.addCell(amountWordsCell);
+        // Words cell (left)
+        PdfPCell wordsCell = new PdfPCell();
+        wordsCell.setBorder(Rectangle.NO_BORDER);
+        wordsCell.setVerticalAlignment(Element.ALIGN_MIDDLE);
+        wordsCell.setPaddingLeft(6);
+        wordsCell.addElement(new Paragraph(words, FONT_AMOUNT_WORDS));
+        amountInnerTable.addCell(wordsCell);
 
-        PdfPCell amountNumCell = new PdfPCell();
-        amountNumCell.setBackgroundColor(LIGHT_GRAY_BG);
-        amountNumCell.setBorderColor(BORDER_RED);
-        amountNumCell.setBorderWidth(1);
-        amountNumCell.setPadding(8);
-        amountNumCell.setHorizontalAlignment(Element.ALIGN_RIGHT);
-        amountNumCell.setVerticalAlignment(Element.ALIGN_MIDDLE);
-        amountNumCell.addElement(new Paragraph(formattedAmount, FONT_AMOUNT_NUM));
-        amountTable.addCell(amountNumCell);
+        // Amount number cell: Rupee icon badge + amount number inline with subtle space
+        DecimalFormat df = (receipt.getAmount() % 1 == 0)
+                ? new DecimalFormat("#,##,##0")
+                : new DecimalFormat("#,##,##0.00");
+        String formattedAmountNum = df.format(receipt.getAmount());
 
-        document.add(amountTable);
+        PdfPCell amountValCell = new PdfPCell();
+        amountValCell.setBorder(Rectangle.NO_BORDER);
+        amountValCell.setVerticalAlignment(Element.ALIGN_MIDDLE);
+        amountValCell.setHorizontalAlignment(Element.ALIGN_RIGHT);
+        amountValCell.setPaddingRight(24);
 
-        // 3. Middle Section: Two Columns (Donor Details on Left, Payment Details + Signature on Right)
+        Paragraph amountPara = new Paragraph();
+        amountPara.setAlignment(Element.ALIGN_RIGHT);
+
+        Image rupeeIcon = loadClasspathImage("pdf/rupee_icon.png");
+        if (rupeeIcon != null) {
+            rupeeIcon.scaleToFit(22, 22);
+            // Offset vertically by -4.5f so the 22pt icon center aligns with 19.5pt font cap-height
+            Chunk iconChunk = new Chunk(rupeeIcon, 0, -4.5f, false);
+            amountPara.add(iconChunk);
+            // Small subtle spacing between rupee icon and total amount
+            amountPara.add(new Chunk(" ", FontFactory.getFont(FontFactory.HELVETICA_BOLD, 12)));
+        }
+        amountPara.add(new Chunk(formattedAmountNum, FONT_AMOUNT_NUM));
+
+        amountValCell.addElement(amountPara);
+        amountInnerTable.addCell(amountValCell);
+
+        amountOuterCell.addElement(amountInnerTable);
+        amountOuterTable.addCell(amountOuterCell);
+        document.add(amountOuterTable);
+
+        // 4. Middle Section: Two Columns (Donor Details on Left, Payment Details + Signature on Right)
         PdfPTable detailsTable = new PdfPTable(new float[]{1f, 1f});
         detailsTable.setWidthPercentage(100);
-        detailsTable.setSpacingAfter(7);
+        detailsTable.setSpacingAfter(22); // Space between details section and bottommost footer
 
         // Left Column: Donor Details Box
         PdfPCell donorBoxCell = new PdfPCell();
-        donorBoxCell.setBackgroundColor(LIGHT_GRAY_BG);
-        donorBoxCell.setBorderColor(BORDER_RED);
-        donorBoxCell.setBorderWidth(1);
-        donorBoxCell.setPadding(10);
-
-        Paragraph donorTag = new Paragraph("Donor Details (T&C mentioned backside for 80G/10BE)", FONT_BOX_TAG);
-        donorTag.setSpacingAfter(6);
-        donorBoxCell.addElement(donorTag);
+        donorBoxCell.setBorder(Rectangle.NO_BORDER);
+        donorBoxCell.setPadding(12);
+        donorBoxCell.setPaddingTop(16);
+        donorBoxCell.setCellEvent(new RoundedLegendBoxEvent(
+                "Donor Details (T&C mentioned backside for 80G/10BE)", LABEL_PINK, Color.RED, LIGHT_GRAY_BG,
+                4f, false, -1, 13f, BF_HELVETICA_BOLD
+        ));
 
         donorBoxCell.addElement(createFieldParagraph("Name", receipt.getDonorName()));
         donorBoxCell.addElement(createFieldParagraph("Address", buildFullAddress(receipt)));
+
+        // Spacer between address and PIN
+        Paragraph spacer = new Paragraph(" ", FontFactory.getFont(FontFactory.HELVETICA, 8));
+        donorBoxCell.addElement(spacer);
+
         donorBoxCell.addElement(createFieldParagraph("PIN", receipt.getDonorPIN()));
         donorBoxCell.addElement(createFieldParagraph("PAN", receipt.getPan()));
         donorBoxCell.addElement(createFieldParagraph("Mobile", receipt.getMobile()));
@@ -271,44 +429,61 @@ public class PdfReceiptService {
         // Right Column: Payment Details + Signature Box
         PdfPCell rightColCell = new PdfPCell();
         rightColCell.setBorder(Rectangle.NO_BORDER);
-        rightColCell.setPaddingLeft(8);
+        rightColCell.setPaddingLeft(10);
 
         PdfPTable rightSubTable = new PdfPTable(1);
         rightSubTable.setWidthPercentage(100);
 
         // Mode of Payment
-        rightSubTable.addCell(createLabeledBox("Mode of Payment (Cheque / Online / UPI / Cash)", receipt.getPaymentMode()));
+        rightSubTable.addCell(createRoundedFieldBox(
+                "Mode of Payment (Cheque / Online / UPI / Cash)",
+                receipt.getPaymentMode(),
+                41f
+        ));
+
+        rightSubTable.addCell(createSpacingCell(11f));
 
         // Payment Details with Donation ID
         String paymentDetails = receipt.getTransactionID() != null && !receipt.getTransactionID().isBlank()
                 ? receipt.getTransactionID() + " (Donation Id: " + receipt.getDonationId() + ")"
                 : "Donation Id: " + receipt.getDonationId();
-        rightSubTable.addCell(createLabeledBox("Payment Details (Cheque / Transaction Details)", paymentDetails));
+        rightSubTable.addCell(createRoundedFieldBox(
+                "Payment Details (Cheque / Transaction Details)",
+                paymentDetails,
+                41f
+        ));
+
+        rightSubTable.addCell(createSpacingCell(11f));
 
         // Purpose of Donation
-        rightSubTable.addCell(createLabeledBox("Purpose of Donation (Corpus / General / Others)", receipt.getPurpose()));
+        rightSubTable.addCell(createRoundedFieldBox(
+                "Purpose of Donation (Corpus / General / Others)",
+                receipt.getPurpose(),
+                41f
+        ));
 
-        // Representative Signature Box
+        rightSubTable.addCell(createSpacingCell(11f));
+
+        // Representative Signature Box (Bottom legend tag in ISKCON blue)
         PdfPCell signCell = new PdfPCell();
-        signCell.setBackgroundColor(LIGHT_GRAY_BG);
-        signCell.setBorderColor(BORDER_RED);
-        signCell.setBorderWidth(1);
-        signCell.setPadding(5);
-        signCell.setMinimumHeight(60);
+        signCell.setBorder(Rectangle.NO_BORDER);
+        signCell.setPadding(3);
+        signCell.setPaddingBottom(8);
+        signCell.setMinimumHeight(64f);
         signCell.setHorizontalAlignment(Element.ALIGN_CENTER);
         signCell.setVerticalAlignment(Element.ALIGN_MIDDLE);
+        signCell.setCellEvent(new RoundedLegendBoxEvent(
+                "Signature of ISKCON Representative", ISKCON_BLUE, Color.RED, LIGHT_GRAY_BG,
+                4f, true, 0.65f, 10.5f, BF_HELVETICA_BOLD
+        ));
 
         String signFile = getSignatureFileName(receipt.getDonorCultivatorId());
         Image signImg = loadClasspathImage("pdf/signatures/" + signFile);
         if (signImg != null) {
-            signImg.scaleToFit(160, 40);
+            signImg.scaleToFit(160, 44);
             signImg.setAlignment(Element.ALIGN_CENTER);
             signCell.addElement(signImg);
         }
-
-        Paragraph signLabel = new Paragraph("Signature of ISKCON Representative", FONT_SIGN_LABEL);
-        signLabel.setAlignment(Element.ALIGN_CENTER);
-        signCell.addElement(signLabel);
 
         rightSubTable.addCell(signCell);
 
@@ -317,7 +492,7 @@ public class PdfReceiptService {
 
         document.add(detailsTable);
 
-        // 4. Bottom Footer: Registered Office Info
+        // 5. Bottom Footer: Registered Office Info (Fills down to the bottom)
         PdfPTable footerTable = new PdfPTable(1);
         footerTable.setWidthPercentage(100);
 
@@ -325,7 +500,7 @@ public class PdfReceiptService {
         footerCell.setBackgroundColor(YELLOW_BG);
         footerCell.setBorderColor(BORDER_RED);
         footerCell.setBorderWidth(1);
-        footerCell.setPadding(6);
+        footerCell.setPadding(10);
 
         Paragraph regOffice = new Paragraph(
                 "Registered Office: Hare Krishna Land, Juhu, Mumbai - 400 049. Mobile: 72088 46210. " +
@@ -334,6 +509,7 @@ public class PdfReceiptService {
                 FONT_FOOTER
         );
         regOffice.setAlignment(Element.ALIGN_CENTER);
+        regOffice.setLeading(15f);
         footerCell.addElement(regOffice);
         footerTable.addCell(footerCell);
 
@@ -342,6 +518,7 @@ public class PdfReceiptService {
 
     private void buildPageTwo(Document document) throws Exception {
         Paragraph heading = new Paragraph("Please note Terms and Conditions (T&C):", FONT_PAGE2_HEADING);
+        heading.setSpacingBefore(2);
         heading.setSpacingAfter(12);
         document.add(heading);
 
@@ -357,25 +534,26 @@ public class PdfReceiptService {
                 "In case of any error/discrepancy in this receipt, including your Name, address and PAN, E-mail ID, WhatsApp number etc., please contact the receipt issuing centre for correction."
         };
 
-        com.lowagie.text.List list = new com.lowagie.text.List(false, 18);
-        list.setListSymbol(new Chunk("\u2022 ", FontFactory.getFont(FontFactory.HELVETICA_BOLD, 12, TEXT_DARK)));
+        com.lowagie.text.List list = new com.lowagie.text.List(false, 20);
+        list.setListSymbol(new Chunk("\u2022 ", FontFactory.getFont(FontFactory.HELVETICA_BOLD, 13.5f, TEXT_DARK)));
         for (String term : terms) {
             ListItem item = new ListItem(term, FONT_PAGE2_BULLET);
-            item.setSpacingAfter(6f);
+            item.setSpacingAfter(7.5f);
+            item.setLeading(18f);
             list.add(item);
         }
         document.add(list);
 
         Paragraph thankYou = new Paragraph("\nThank you for your support.",
-                FontFactory.getFont(FontFactory.HELVETICA_BOLD, 13, TEXT_DARK));
+                FontFactory.getFont(FontFactory.HELVETICA_BOLD, 16f, TEXT_DARK));
         thankYou.setAlignment(Element.ALIGN_CENTER);
-        thankYou.setSpacingBefore(10);
+        thankYou.setSpacingBefore(14);
         document.add(thankYou);
 
         Paragraph chant = new Paragraph("Please chant",
-                FontFactory.getFont(FontFactory.HELVETICA, 12, TEXT_DARK));
+                FontFactory.getFont(FontFactory.HELVETICA, 13.5f, TEXT_DARK));
         chant.setAlignment(Element.ALIGN_CENTER);
-        chant.setSpacingBefore(4);
+        chant.setSpacingBefore(6);
         document.add(chant);
 
         Paragraph mantra = new Paragraph(
@@ -384,27 +562,30 @@ public class PdfReceiptService {
                 FONT_PAGE2_MANTRA
         );
         mantra.setAlignment(Element.ALIGN_CENTER);
-        mantra.setSpacingBefore(6);
-        mantra.setSpacingAfter(6);
+        mantra.setSpacingBefore(8);
+        mantra.setSpacingAfter(8);
         document.add(mantra);
 
         Paragraph happy = new Paragraph("and be happy.",
-                FontFactory.getFont(FontFactory.HELVETICA_OBLIQUE, 12, TEXT_DARK));
+                FontFactory.getFont(FontFactory.HELVETICA_OBLIQUE, 13.5f, TEXT_DARK));
         happy.setAlignment(Element.ALIGN_CENTER);
+        happy.setSpacingBefore(4);
         document.add(happy);
     }
 
-    private PdfPCell createLabeledBox(String label, String value) {
+    private PdfPCell createRoundedFieldBox(String label, String value, float minHeight) {
         PdfPCell cell = new PdfPCell();
-        cell.setBackgroundColor(LIGHT_GRAY_BG);
-        cell.setBorderColor(BORDER_RED);
-        cell.setBorderWidth(1);
+        cell.setBorder(Rectangle.NO_BORDER);
         cell.setPadding(3);
-        cell.setPaddingBottom(5);
-
-        Paragraph pLabel = new Paragraph(label, FONT_PAYMENT_LABEL);
-        pLabel.setAlignment(Element.ALIGN_CENTER);
-        cell.addElement(pLabel);
+        cell.setPaddingTop(7);
+        cell.setPaddingBottom(3);
+        cell.setMinimumHeight(minHeight);
+        cell.setHorizontalAlignment(Element.ALIGN_CENTER);
+        cell.setVerticalAlignment(Element.ALIGN_MIDDLE);
+        cell.setCellEvent(new RoundedLegendBoxEvent(
+                label, LABEL_PINK, Color.RED, LIGHT_GRAY_BG,
+                4f, false, -1, 12f, BF_HELVETICA_BOLD
+        ));
 
         Paragraph pVal = new Paragraph(value != null && !value.isBlank() ? value : " ", FONT_PAYMENT_VALUE);
         pVal.setAlignment(Element.ALIGN_CENTER);
@@ -413,9 +594,16 @@ public class PdfReceiptService {
         return cell;
     }
 
+    private PdfPCell createSpacingCell(float height) {
+        PdfPCell cell = new PdfPCell();
+        cell.setBorder(Rectangle.NO_BORDER);
+        cell.setFixedHeight(height);
+        return cell;
+    }
+
     private Paragraph createFieldParagraph(String label, String value) {
         Paragraph p = new Paragraph();
-        p.setSpacingAfter(4f);
+        p.setSpacingAfter(5.5f);
         p.add(new Chunk(label + ": ", FONT_DONOR_LABEL));
         p.add(new Chunk(value != null && !value.isBlank() ? value : "", FONT_DONOR_VALUE));
         return p;
@@ -476,17 +664,15 @@ public class PdfReceiptService {
             return "";
         }
         try {
-            // Check if already in yyyy-MM-dd or timestamp format
             if (dateString.contains("T")) {
                 dateString = dateString.substring(0, dateString.indexOf("T"));
             }
             SimpleDateFormat inputFormat = new SimpleDateFormat("yyyy-MM-dd");
             Date date = inputFormat.parse(dateString);
-            SimpleDateFormat outputFormat = new SimpleDateFormat("dd MMM, yyyy");
+            SimpleDateFormat outputFormat = new SimpleDateFormat("MMM dd, yyyy", Locale.ENGLISH);
             return outputFormat.format(date);
         } catch (Exception e) {
             return dateString;
         }
     }
 }
-
