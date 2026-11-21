@@ -4,9 +4,13 @@ import com.iskcondhanbad.donordash.dto.LoginRequestDto;
 import com.iskcondhanbad.donordash.dto.LoginResponseDto;
 import com.iskcondhanbad.donordash.model.*;
 import com.iskcondhanbad.donordash.repository.*;
+import com.iskcondhanbad.donordash.security.JwtUtil;
+import com.iskcondhanbad.donordash.utils.Constants;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+@Slf4j
 @Service
 public class AuthService {
 
@@ -22,17 +26,20 @@ public class AuthService {
     @Autowired
     private DonorRepository donorRepository;
 
+    @Autowired
+    private JwtUtil jwtUtil;
+
     public LoginResponseDto loginUser(LoginRequestDto loginRequest) throws Exception {
         String mobileNumber = loginRequest.getMobileNumber();
         String password = loginRequest.getPassword();
 
-       System.out.println(mobileNumber);
-        System.out.println(password);
+        log.info("Login attempt for mobile number: {}", mobileNumber);
 
         Admin admin = adminRepository.findByMobileNumber(mobileNumber);
         if (admin != null) {
             if (admin.getPassword().equals(password)) {
-                return new LoginResponseDto("admin", admin);
+                String token = jwtUtil.generateToken(admin.getMobileNumber(), admin.getId(), Constants.ADMIN, admin.getName());
+                return new LoginResponseDto(Constants.ADMIN, admin, token);
             } else {
                 throw new Exception("Incorrect password for admin.");
             }
@@ -41,7 +48,8 @@ public class AuthService {
         DonationSupervisor supervisor = donationSupervisorRepository.findByMobileNumber(mobileNumber);
         if (supervisor != null) {
             if (supervisor.getPassword().equals(password)) {
-                return new LoginResponseDto("donationSupervisor", supervisor);
+                String token = jwtUtil.generateToken(supervisor.getMobileNumber(), supervisor.getId(), Constants.DONATION_SUPERVISOR, supervisor.getName());
+                return new LoginResponseDto(Constants.DONATION_SUPERVISOR, supervisor, token);
             } else {
                 throw new Exception("Incorrect password for donation supervisor.");
             }
@@ -50,7 +58,8 @@ public class AuthService {
         StoredDonorCultivator cultivator = donorCultivatorRepository.findByMobileNumber(mobileNumber);
         if (cultivator != null) {
             if (cultivator.getPassword().equals(password)) {
-                return new LoginResponseDto("donorCultivator", cultivator);
+                String token = jwtUtil.generateToken(cultivator.getMobileNumber(), cultivator.getId(), Constants.DONOR_CULTIVATOR, cultivator.getName());
+                return new LoginResponseDto(Constants.DONOR_CULTIVATOR, cultivator, token);
             } else {
                 throw new Exception("Incorrect password for donor cultivator.");
             }
@@ -59,7 +68,8 @@ public class AuthService {
         StoredDonor donor = donorRepository.findByMobileNumber(mobileNumber);
         if (donor != null) {
             if (donor.getPassword().equals(password)) {
-                return new LoginResponseDto("donor", donor);
+                String token = jwtUtil.generateToken(donor.getMobileNumber(), donor.getId(), Constants.DONOR, donor.getName());
+                return new LoginResponseDto(Constants.DONOR, donor, token);
             } else {
                 throw new Exception("Incorrect password for donor.");
             }

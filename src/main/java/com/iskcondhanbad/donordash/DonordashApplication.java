@@ -20,8 +20,8 @@ public class DonordashApplication {
                 "WHATSAPP_PHONE_NUMBER_ID", "WHATSAPP_ACCESS_TOKEN",
                 "WHATSAPP_TEMPLATE_NAME", "WHATSAPP_TEMPLATE_LANGUAGE",
                 "WHATSAPP_API_VERSION",
-                "WHATSAPP_PARAM_NAME", "WHATSAPP_PARAM_ADDRESS",
-                "WHATSAPP_PARAM_PAN", "WHATSAPP_PARAM_AMOUNT"
+                "CORS_ALLOWED_ORIGINS",
+                "JWT_SECRET", "JWT_EXPIRATION_MS"
         };
         for (String envVar : envVars) {
             String value = System.getenv(envVar);

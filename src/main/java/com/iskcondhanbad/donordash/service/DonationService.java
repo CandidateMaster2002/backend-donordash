@@ -8,6 +8,7 @@ import com.iskcondhanbad.donordash.model.StoredDonorCultivator;
 import com.iskcondhanbad.donordash.repository.DonationRepository;
 import com.iskcondhanbad.donordash.repository.DonorRepository;
 import com.iskcondhanbad.donordash.repository.DonorCultivatorRepository;
+import com.iskcondhanbad.donordash.security.SecurityUtils;
 import com.iskcondhanbad.donordash.utils.Constants;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
@@ -19,6 +20,7 @@ import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
 import lombok.NonNull;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -183,6 +185,12 @@ public class DonationService {
             return donation;
         }
         validateStatusChange(currentStatus, newStatus);
+
+        if (Constants.VERIFIED.equalsIgnoreCase(newStatus)) {
+            if (!SecurityUtils.isAdmin()) {
+                throw new AccessDeniedException("Only administrators can verify donations.");
+            }
+        }
 
         if (Constants.VERIFIED.equalsIgnoreCase(newStatus) && Objects.isNull(donation.getTransactionId())
                 && !Constants.CASH.equalsIgnoreCase(donation.getPaymentMode())) {

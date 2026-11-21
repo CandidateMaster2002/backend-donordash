@@ -42,6 +42,20 @@ public class Constants {
 
     public static final String NO_RECEIPT = "no_receipt";
 
+    // Authentication and JWT
+    public static final String ADMIN = "admin";
+    public static final String DONATION_SUPERVISOR = "donationSupervisor";
+    public static final String DONOR_CULTIVATOR = "donorCultivator";
+    public static final String DONOR = "donor";
+
+    public static final String USER_ID = "userId";
+    public static final String ROLE = "role";
+    public static final String MOBILE_NUMBER = "mobileNumber";
+    public static final String NAME = "name";
+
+    public static final String AUTHORIZATION_HEADER = "Authorization";
+    public static final String BEARER_PREFIX = "Bearer ";
+
     // Donor categories
     public static final String VERY_BIG_DONOR = "Very Big Donor";
     public static final String MEDIUM_DONOR = "Medium Donor";
@@ -50,6 +64,7 @@ public class Constants {
     public static final String GENERAL_DONOR = "General Donor";
     public static final String ONE_TIMER = "One Timer";
     public static final String NITYA_SEVAK = "Nitya Sevak";
+    public static final String ANONYMOUS_USER = "anonymousUser";
 
     public static final int DUPLICATE_CHECK_DAYS = 30;
 

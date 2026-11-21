@@ -6,6 +6,7 @@ import com.iskcondhanbad.donordash.service.DonationService;
 import com.iskcondhanbad.donordash.service.PdfReceiptService;
 import com.iskcondhanbad.donordash.service.RazorpayService;
 import com.iskcondhanbad.donordash.service.WhatsAppService;
+import com.iskcondhanbad.donordash.security.SecurityUtils;
 import com.iskcondhanbad.donordash.utils.Constants;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,6 +16,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.*;
@@ -69,8 +71,17 @@ public class DonationController {
     @PutMapping("/change-status/{donationId}/{newStatus}")
     public ResponseEntity<?> changeStatus(@PathVariable Long donationId, @PathVariable String newStatus) {
         try {
+            if (Constants.VERIFIED.equalsIgnoreCase(newStatus) && !SecurityUtils.isAdmin()) {
+                log.warn("Unauthorized attempt to verify donation {}. User does not have ADMIN privileges.", donationId);
+                return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                        .body(new ApiResponseDto<>(false, "Only administrators can verify donations."));
+            }
             StoredDonation donation = donationService.changeStatus(donationId, newStatus);
             return ResponseEntity.ok(donation);
+        } catch (AccessDeniedException e) {
+            log.warn("Access denied in changeStatus: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(new ApiResponseDto<>(false, e.getMessage()));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
